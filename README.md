@@ -5,11 +5,14 @@ ifm - улучшенная версия [cfm](https://github.com/yinmus/cfm.git)
 **..**
 ###### Сейчас код просматривает изображения используя `feh`. Медиа с помощью `vlc`. Текстовые файлы и т.п. `micro`. Вы можете поменять под свои 
 
-**Images**
-###### Не показывает скрытые файлы
+## Images
 
-<img src=".img/img1.png" alt="scr" width="400">
+<details>
+  <summary>Не показывает скрытые файлы</summary>
+  <img src=".img/img1.png" alt="scr" width="400">
+</details>
 
-###### Показывает скрытые файлы
-
-<img src=".img/img2.png" alt="scr" width="400">
+<details>
+  <summary>Показывает скрытые файлы</summary>
+  <img src=".img/img2.png" alt="scr" width="400">
+</details>
