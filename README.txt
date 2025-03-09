@@ -46,5 +46,5 @@ make install
       Scroll       Use the mouse wheel or [K/J] keys.
 
 =======================================================================================
-    
+Для полного удаления: make uninstall
 LICENSE : MIT
