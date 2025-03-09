@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=IFM
 GenericName=File Manager
-Comment=Lightweight terminal-based file manager
+Comment=Lightweight terminal file manager
 Exec=sh -c 'exec /usr/bin/ifm %U'
 Icon=ifm
 Terminal=true
