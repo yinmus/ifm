@@ -21,6 +21,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
 // GITHUB: https://github.com/yinmus/ifm
 
 #include <ncurses.h>
@@ -32,17 +33,17 @@
 #include <locale.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <wchar.h> 
+#include <wchar.h>
 #include "icons.h"
 
 #define MAX_FILES 1024
 #define MAX_PATH 1024
 #define MAX_NAME 256
 
-#define VIDEO_VIEWER "mpv" // Просмотр видео
-#define AUDIO_VIEWER "mpv" // Просмотр аудио
-#define IMAGE_VIEWER "feh" // Просимотр изображений
-#define DEFAULT_VIEWER "micro" // Остальное
+#define VIDEO_VIEWER "mpv"
+#define AUDIO_VIEWER "mpv"
+#define IMAGE_VIEWER "feh"
+#define DEFAULT_VIEWER "micro"
 
 char files[MAX_FILES][MAX_PATH];
 int file_count = 0, selected = 0, offset = 0;
@@ -63,8 +64,9 @@ void cr_file();
 void to_back();
 void to_home();
 void cr_dir();
+void rename_fd(const char *filename);
 int dirt(const char *path);
-int conf_ex(); 
+int conf_ex();
 
 int dist_s(const char *str) {
     wchar_t wstr[MAX_NAME];
@@ -73,7 +75,8 @@ int dist_s(const char *str) {
 }
 
 void cls_scr() {
-    system("clear");
+    clear();
+    refresh();
 }
 
 void help_view() {
@@ -91,6 +94,7 @@ void help_view() {
     printf("  [T]          Create a new file in the current directory.\n");
     printf("  [Shift + D]  Create a new directory in the current directory.\n");
     printf("  [D]          Delete the selected file or directory (confirmation required).\n");
+    printf("  [R]          Rename the selected file or directory.\n");
     printf("  [Q]          Exit IFM (confirmation required).\n");
     printf("  [Alt + A]    Open this help manual.\n");
     printf("\n");
@@ -105,31 +109,31 @@ void help_view() {
     printf("  Text:        %s\n", DEFAULT_VIEWER);
     printf("\n");
     printf("Press Enter...\n");
-    getchar(); 
+    getchar();
 
     reset_prog_mode();
     refresh();
 }
 
 int conf_ex() {
-    curs_set(1); 
-    echo();      
+    curs_set(1);
+    echo();
     char response[MAX_NAME];
     mvprintw(LINES - 2, 0, "Quit? (y/n): ");
     getnstr(response, MAX_NAME - 1);
-    noecho();    
-    curs_set(0); 
+    noecho();
+    curs_set(0);
     return (response[0] == 'y' || response[0] == 'Y');
 }
 
 int conf_del(const char *filename) {
-    curs_set(1); 
-    echo();      
+    curs_set(1);
+    echo();
     char response[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Delete %s'? (y/n): ", filename);
+    mvprintw(LINES - 2, 0, "Delete %s? (y/n): ", filename);
     getnstr(response, MAX_NAME - 1);
-    noecho();    
-    curs_set(0); 
+    noecho();
+    curs_set(0);
     return (response[0] == 'y' || response[0] == 'Y');
 }
 
@@ -139,7 +143,7 @@ void ls_files(const char *path) {
         perror("opendir");
         return;
     }
-    
+
     file_count = 0;
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL && file_count < MAX_FILES) {
@@ -186,11 +190,11 @@ void ui() {
     mvprintw(0, 0, "[ IFileManager ] - %s", path);
     attroff(A_BOLD);
     mvprintw(1, 0, "──────────────────────────────────────────────────────────────");
-    
-    int height = LINES - 6; 
+
+    int height = LINES - 6;
     if (selected >= offset + height) offset = selected - height + 1;
     if (selected < offset) offset = selected;
-    
+
     int start_y = 2;
     int start_x = 0;
     int end_y = start_y + height;
@@ -198,14 +202,14 @@ void ui() {
 
     for (int y = start_y; y <= end_y; y++) {
         if (y == start_y || y == end_y) {
-            mvaddch(y, start_x, ACS_ULCORNER); 
-            mvaddch(y, end_x, ACS_URCORNER);  
+            mvaddch(y, start_x, ACS_ULCORNER);
+            mvaddch(y, end_x, ACS_URCORNER);
             for (int x = start_x + 1; x < end_x; x++) {
-                mvaddch(y, x, ACS_HLINE);      
+                mvaddch(y, x, ACS_HLINE);
             }
         } else {
-            mvaddch(y, start_x, ACS_VLINE);     
-            mvaddch(y, end_x, ACS_VLINE);       
+            mvaddch(y, start_x, ACS_VLINE);
+            mvaddch(y, end_x, ACS_VLINE);
         }
     }
 
@@ -219,9 +223,9 @@ void ui() {
         if (stat(full_path, &st) == 0) {
             if (S_ISDIR(st.st_mode)) {
                 icon = "";
-                attron(COLOR_PAIR(1)); 
+                attron(COLOR_PAIR(1));
             } else if (S_ISREG(st.st_mode)) {
-                attron(COLOR_PAIR(2)); 
+                attron(COLOR_PAIR(2));
                 const char *ext = strrchr(files[i + offset], '.');
                 if (ext) {
                     ext++;
@@ -279,21 +283,26 @@ void rmfd(const char *filename) {
 
     char full_path[MAX_PATH];
     snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
-    
+
     struct stat st;
     if (stat(full_path, &st) == 0) {
         if (S_ISDIR(st.st_mode)) {
-            rmdir(full_path);
+            if (rmdir(full_path) != 0) {
+                mvprintw(LINES - 1, 0, "Error: Could not delete directory.");
+            }
         } else {
-            remove(full_path);
+            if (remove(full_path) != 0) {
+                mvprintw(LINES - 1, 0, "Error: Could not delete file.");
+            }
         }
+        ls_files(path);
     }
 }
 
 void open_file(const char *filename) {
     char full_path[MAX_PATH];
     snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
-    
+
     const char *ext = strrchr(filename, '.');
     if (!ext) {
         char cmd[MAX_PATH + 50];
@@ -327,7 +336,7 @@ void open_file(const char *filename) {
     }
 
     char cmd[MAX_PATH + 50];
-    snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path); 
+    snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path);
     system(cmd);
 }
 
@@ -337,7 +346,7 @@ void cr_file() {
     mvprintw(LINES - 2, 0, "Enter filename: ");
     getnstr(filename, MAX_NAME - 1);
     noecho();
-    
+
     if (strlen(filename) > 0) {
         char full_path[MAX_PATH];
         snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
@@ -372,11 +381,32 @@ void cr_dir() {
     mvprintw(LINES - 2, 0, "Enter directory name: ");
     getnstr(dirname, MAX_NAME - 1);
     noecho();
-    
+
     if (strlen(dirname) > 0) {
         char full_path[MAX_PATH];
         snprintf(full_path, sizeof(full_path), "%s/%s", path, dirname);
         mkdir(full_path, 0777);
+    }
+}
+
+void rename_fd(const char *filename) {
+    echo();
+    char new_name[MAX_NAME];
+    mvprintw(LINES - 2, 0, "Enter new name: ");
+    getnstr(new_name, MAX_NAME - 1);
+    noecho();
+
+    if (strlen(new_name) > 0) {
+        char old_path[MAX_PATH];
+        char new_path[MAX_PATH];
+        snprintf(old_path, sizeof(old_path), "%s/%s", path, filename);
+        snprintf(new_path, sizeof(new_path), "%s/%s", path, new_name);
+
+        if (rename(old_path, new_path) != 0) {
+            mvprintw(LINES - 1, 0, "Error: Could not rename file.");
+        } else {
+            ls_files(path);
+        }
     }
 }
 
@@ -392,8 +422,8 @@ int main(int argc, char *argv[]) {
     curs_set(0);
     keypad(stdscr, TRUE);
     start_color();
-    init_pair(1, COLOR_CYAN, COLOR_BLACK);    // Директории 
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);  // Файлы
+    init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     mouseinterval(0);
@@ -401,7 +431,7 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         strncpy(path, argv[1], sizeof(path));
     } else {
-        getcwd(path, sizeof(path));  
+        getcwd(path, sizeof(path));
     }
 
     ls_files(path);
@@ -410,7 +440,7 @@ int main(int argc, char *argv[]) {
     while (1) {
         ui();
         int ch = getch();
-        
+
         if (ch == KEY_MOUSE) {
             MEVENT event;
             if (getmouse(&event) == OK) {
@@ -420,7 +450,7 @@ int main(int argc, char *argv[]) {
                         selected = y + offset;
                         char full_path[MAX_PATH];
                         snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
-        
+
                         if (dirt(full_path)) {
                             strncpy(lpath, path, sizeof(lpath));
                             chdir(full_path);
@@ -440,20 +470,20 @@ int main(int argc, char *argv[]) {
                     if (selected < file_count - 1) selected++;
                 }
             }
-        } else if (ch == 27) { // Alt
+        } else if (ch == 27) {
             ch = getch();
             if (ch == 'u') {
                 s_hidden = !s_hidden;
                 ls_files(path);
-            } else if (ch == 'a') { 
-                help_view(); 
+            } else if (ch == 'a') {
+                help_view();
             } else if (ch == 'h') {
                 to_home();
             }
         } else {
             switch (ch) {
                 case 'q':
-                    if (conf_ex()) { 
+                    if (conf_ex()) {
                         cls_scr();
                         endwin();
                         return 0;
@@ -468,11 +498,17 @@ int main(int argc, char *argv[]) {
                 case 'j':
                     if (selected < file_count - 1) selected++;
                     break;
-                case 10: // Enter
+                case 'b':
+                    selected = file_count - 1;
+                    break;
+                case 'g':
+                    selected = 0;
+                    break;
+                case 10:
                 case 'l': {
                     char full_path[MAX_PATH];
                     snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
-            
+
                     if (dirt(full_path)) {
                         strncpy(lpath, path, sizeof(lpath));
                         chdir(full_path);
@@ -485,18 +521,21 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                case KEY_DC: // Delete
+                case KEY_DC:
                     rmfd(files[selected]);
                     ls_files(path);
                     selected = 0;
                     break;
-                case 'd': 
+                case 'd':
                     cr_dir();
                     ls_files(path);
                     break;
                 case 't':
                     cr_file();
                     ls_files(path);
+                    break;
+                case 'r':
+                    rename_fd(files[selected]);
                     break;
             }
         }
