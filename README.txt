@@ -32,6 +32,8 @@ make install
       [K/J]        Move selection up/down through the file list.
       [Enter/L]    Open the selected file or navigate into a directory
       [H]          Go back.
+      [G]          Top of file list.
+      [B]          Down the file list.
       [Alt + U]    Toggle visibility of hidden files (files starting with '.').
       [Alt + H]    Jump to the home directory.
       [T]          Create a new file in the current directory.
