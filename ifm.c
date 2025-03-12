@@ -32,6 +32,8 @@
 #include <unistd.h>
 #include <locale.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <wchar.h>
 #include "icons.h"
@@ -89,31 +91,33 @@ void help_view() {
     printf("  [K/J]        Move selection up/down through the file list.\n");
     printf("  [Enter/L]    Open the selected file or navigate into a directory.\n");
     printf("  [H]          Go back.\n");
-    printf("  [Alt + U]    Toggle visibility of hidden files (files starting with '.').\n");
+    printf("  [U]          Toggle visibility of hidden files (files starting with '.').\n");
     printf("  [Alt + H]    Jump to the home directory.\n");
     printf("  [T]          Create a new file in the current directory.\n");
-    printf("  [Shift + D]  Create a new directory in the current directory.\n");
-    printf("  [D]          Delete the selected file or directory (confirmation required).\n");
+    printf("  [D]  Create a new directory in the current directory.\n");
+    printf("  [Delete]          Delete the selected file or directory (confirmation required).\n");
     printf("  [R]          Rename the selected file or directory.\n");
+    printf("  [C]          Open file with a custom viewer.\n");
     printf("  [Q]          Exit IFM (confirmation required).\n");
-    printf("  [Alt + A]    Open this help manual.\n");
+    printf("  [F1]         Open this help manual.\n");
     printf("\n");
     printf("Mouse:\n");
     printf("  Left-click   Select/open files.\n");
     printf("  Right-click  Go back.\n");
     printf("  Scroll       Use the mouse wheel or [K/J] keys.\n");
     printf("\n");
-    printf("Viewers:\n");
+    printf("Default Viewers:\n");
     printf("  Images:      %s\n", IMAGE_VIEWER);
     printf("  Audio/Video: %s, %s\n", VIDEO_VIEWER, AUDIO_VIEWER);
     printf("  Text:        %s\n", DEFAULT_VIEWER);
     printf("\n");
-    printf("Press Enter...\n");
+    printf("Press Enter to continue...\n");
     getchar();
 
     reset_prog_mode();
     refresh();
 }
+
 
 int conf_ex() {
     curs_set(1);
@@ -415,6 +419,69 @@ int dirt(const char *path) {
     return (stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
 }
 
+void custom_view(const char *filename) {
+    echo();  
+    char viewer[MAX_NAME];
+    mvprintw(LINES - 2, 0, "Enter viewer: ");
+    getnstr(viewer, MAX_NAME - 1);  
+    noecho(); 
+
+    if (strlen(viewer) > 0) {
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
+
+        const char *ext = strrchr(filename, '.');
+        if (!ext) {
+            ext = "";
+        } else {
+            ext++; 
+        }
+
+        const char *image_formats[] = {"png", "jpg", "jpeg", "webp", "svg", "bmp", "gif", "tiff"};
+        const char *video_audio_formats[] = {
+            "mp3", "mp4", "wav", "ogg", "mkv", "webm", "flac", "avi", "mov", "m4a", "aac"
+        };
+
+        int is_media = 0;
+        for (size_t i = 0; i < sizeof(image_formats) / sizeof(image_formats[0]); i++) {
+            if (!strcasecmp(ext, image_formats[i])) {
+                is_media = 1;
+                break;
+            }
+        }
+        for (size_t i = 0; i < sizeof(video_audio_formats) / sizeof(video_audio_formats[0]); i++) {
+            if (!strcasecmp(ext, video_audio_formats[i])) {
+                is_media = 1;
+                break;
+            }
+        }
+
+        if (is_media) {
+            char cmd[MAX_PATH + 50];
+            snprintf(cmd, sizeof(cmd), "%s '%s' &> /dev/null &", viewer, full_path);
+            system(cmd);
+        } else {
+            def_prog_mode(); 
+            endwin(); 
+
+            pid_t pid = fork();
+            if (pid == 0) {  
+                execlp(viewer, viewer, full_path, (char *)NULL);
+                perror("execlp failed");
+                exit(EXIT_FAILURE);
+            } else if (pid > 0) {  
+                int status;
+                waitpid(pid, &status, 0);
+            } else {
+                perror("fork failed");
+            }
+
+            reset_prog_mode();  
+            refresh();
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "");
     initscr();
@@ -472,19 +539,17 @@ int main(int argc, char *argv[]) {
             }
         } else if (ch == 27) {
             ch = getch();
-            if (ch == 'u') {
-                s_hidden = !s_hidden;
-                ls_files(path);
-            } else if (ch == 'a') {
+            if (ch == 'a') {
                 help_view();
             } else if (ch == 'h') {
                 to_home();
             }
+
         } else {
             switch (ch) {
                 case 'q':
                     if (conf_ex()) {
-                        cls_scr();
+                        clear();
                         endwin();
                         return 0;
                     }
@@ -503,6 +568,10 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'g':
                     selected = 0;
+                    break;
+                case 'u':
+                    s_hidden = !s_hidden;
+                    ls_files(path);
                     break;
                 case 10:
                 case 'l': {
@@ -536,6 +605,12 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'r':
                     rename_fd(files[selected]);
+                    break;
+                case 'c':
+                    custom_view(files[selected]);
+                    break;
+                case KEY_F(1):  // F1
+                    help_view();
                     break;
             }
         }
