@@ -85,39 +85,41 @@ void help_view() {
     def_prog_mode();
     endwin();
 
-    printf("IFM - Lightweight Ncurses File Manager\n");
-    printf("======================================\n");
-    printf("Controls:\n");
-    printf("  [K/J]        Move selection up/down through the file list.\n");
-    printf("  [Enter/L]    Open the selected file or navigate into a directory.\n");
-    printf("  [H]          Go back.\n");
-    printf("  [U]          Toggle visibility of hidden files (files starting with '.').\n");
-    printf("  [Alt + H]    Jump to the home directory.\n");
-    printf("  [T]          Create a new file in the current directory.\n");
-    printf("  [D]  Create a new directory in the current directory.\n");
-    printf("  [Delete]          Delete the selected file or directory (confirmation required).\n");
-    printf("  [R]          Rename the selected file or directory.\n");
-    printf("  [C]          Open file with a custom viewer.\n");
-    printf("  [Q]          Exit IFM (confirmation required).\n");
-    printf("  [F1]         Open this help manual.\n");
-    printf("\n");
-    printf("Mouse:\n");
-    printf("  Left-click   Select/open files.\n");
-    printf("  Right-click  Go back.\n");
-    printf("  Scroll       Use the mouse wheel or [K/J] keys.\n");
-    printf("\n");
-    printf("Default Viewers:\n");
-    printf("  Images:      %s\n", IMAGE_VIEWER);
-    printf("  Audio/Video: %s, %s\n", VIDEO_VIEWER, AUDIO_VIEWER);
-    printf("  Text:        %s\n", DEFAULT_VIEWER);
-    printf("\n");
-    printf("Press Enter to continue...\n");
-    getchar();
+    FILE *pager = popen("less", "w"); 
+
+    if (pager == NULL) {
+        perror("popen");
+        return;
+    }
+
+    fprintf(pager, "IFM - Lightweight Ncurses File Manager\n");
+    fprintf(pager, "======================================\n");
+    fprintf(pager, "Controls:\n");
+    fprintf(pager, "  [K/J]        Move up/down\n");
+    fprintf(pager, "  [Enter/L]    Open file/dir\n");
+    fprintf(pager, "  [H]          Go back\n");
+    fprintf(pager, "  [U]          Toggle hidden files\n");
+    fprintf(pager, "  [Alt + H]    Go home\n");
+    fprintf(pager, "  [T]          Create file\n");
+    fprintf(pager, "  [D]          Create dir\n");
+    fprintf(pager, "  [Delete]     Delete file/dir\n");
+    fprintf(pager, "  [R]          Rename file/dir\n");
+    fprintf(pager, "  [C]          Open with custom viewer\n");
+    fprintf(pager, "  [Q]          Exit\n");
+    fprintf(pager, "  [F1]         Help\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "\n");
+
+
+    pclose(pager); 
 
     reset_prog_mode();
     refresh();
 }
-
 
 int conf_ex() {
     curs_set(1);
