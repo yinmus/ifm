@@ -412,9 +412,16 @@ void open_file(const char *filename) {
         }
 
         if (is_media) {
-            char cmd[MAX_PATH + 50];
-            snprintf(cmd, sizeof(cmd), "%s '%s' &> /dev/null &", strstr(ext, "mp3") ? AUDIO_VIEWER : VIDEO_VIEWER, full_path);
-            system(cmd);
+            pid_t pid = fork();
+            if (pid == 0) { // Дочерний процесс
+                execlp(IMAGE_VIEWER, IMAGE_VIEWER, full_path, (char *)NULL);
+                perror("execlp failed");
+                exit(EXIT_FAILURE);
+            } else if (pid > 0) { // Родительский процесс
+                // Не ждем завершения дочернего процесса
+            } else {
+                perror("fork failed");
+            }
         } else {
             char cmd[MAX_PATH + 50];
             snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path);
@@ -425,6 +432,7 @@ void open_file(const char *filename) {
     reset_prog_mode(); 
     refresh();  
 }
+
 
 void cr_file() {
     char filename[MAX_NAME];
