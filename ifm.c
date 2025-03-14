@@ -1,28 +1,31 @@
-// ifm.c
-// by yinmus
-// MIT License
+/*
+    ifm.c
+    MIT License
 
-// Copyright (c) 2025 IFM-YINMUS
+    Copyright (c) 2025 IFM-YINMUS
 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+    _____________________________________________________________________________
+    BY YINMUS
+    <https://github.com/yinmus/ifm>
+*/
 
-// GITHUB: https://github.com/yinmus/ifm
 
 #include <ncurses.h>
 #include <stdio.h>
@@ -42,6 +45,9 @@
 #define MAX_PATH 1024
 #define MAX_NAME 256
 
+
+// Default viewers
+
 #define VIDEO_VIEWER "mpv"
 #define AUDIO_VIEWER "mpv"
 #define IMAGE_VIEWER "feh"
@@ -53,22 +59,6 @@ char path[MAX_PATH];
 char lpath[MAX_PATH];
 int s_hidden = 0;
 
-int dist_s(const char *str);
-void cls_scr();
-void help_view();
-int conf_del(const char *filename);
-void ls_files(const char *path);
-void get_inf(const char *filename, char *info, size_t info_size);
-void ui();
-void rmfd(const char *filename);
-void open_file(const char *filename);
-void cr_file();
-void to_back();
-void to_home();
-void cr_dir();
-void rename_fd(const char *filename);
-int dirt(const char *path);
-int conf_ex();
 
 int dist_s(const char *str) {
     wchar_t wstr[MAX_NAME];
@@ -76,9 +66,60 @@ int dist_s(const char *str) {
     return wcswidth(wstr, MAX_NAME);
 }
 
-void cls_scr() {
+void cls() {
     clear();
     refresh();
+}
+
+int esc(char *buffer, int max_len, const char *prompt) {
+    echo();  
+    curs_set(1);  
+
+    int pos = 0; 
+    buffer[0] = '\0';  
+
+    while (1) {
+        move(LINES - 2, 0);
+        clrtoeol();  
+        mvprintw(LINES - 2, 0, "%s: %s", prompt, buffer);  
+        move(LINES - 2, strlen(prompt) + 2 + pos); 
+        refresh();
+
+        int ch = getch();  
+
+        if (ch == '\n' || ch == KEY_ENTER) {  
+            break;
+        } else if (ch == 27) { 
+            noecho();
+            curs_set(0);
+            mvprintw(LINES - 2, 0, "Cancelled. Exiting input...");
+            refresh();
+            usleep(1500000);  
+            return 0;  
+        } else if (ch == 127 || ch == KEY_BACKSPACE) {  
+            if (pos > 0) {
+                memmove(&buffer[pos - 1], &buffer[pos], strlen(buffer) - pos + 1);
+                pos--;
+            }
+        } else if (ch == KEY_DC) {  
+            if (pos < strlen(buffer)) {
+                memmove(&buffer[pos], &buffer[pos + 1], strlen(buffer) - pos);
+            }
+        } else if (ch == KEY_LEFT) {  
+            if (pos > 0) pos--;
+        } else if (ch == KEY_RIGHT) {  
+            if (pos < strlen(buffer)) pos++;
+        } else if (ch >= 32 && ch <= 126 || ch >= 128) {  
+            if (strlen(buffer) < max_len - 1) {
+                memmove(&buffer[pos + 1], &buffer[pos], strlen(buffer) - pos + 1);
+                buffer[pos++] = ch;
+            }
+        }
+    }
+
+    noecho(); 
+    curs_set(0); 
+    return 1;  
 }
 
 void help_view() {
@@ -121,16 +162,8 @@ void help_view() {
     refresh();
 }
 
-int conf_ex() {
-    curs_set(1);
-    echo();
-    char response[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Quit? (y/n): ");
-    getnstr(response, MAX_NAME - 1);
-    noecho();
-    curs_set(0);
-    return (response[0] == 'y' || response[0] == 'Y');
-}
+
+// Confrim delete file/directory
 
 int conf_del(const char *filename) {
     curs_set(1);
@@ -143,7 +176,11 @@ int conf_del(const char *filename) {
     return (response[0] == 'y' || response[0] == 'Y');
 }
 
-void ls_files(const char *path) {
+int compare(const void *a, const void *b) {
+    return strcasecmp((const char *)a, (const char *)b);
+}
+
+void list(const char *path) {
     DIR *dir = opendir(path);
     if (!dir) {
         perror("opendir");
@@ -151,12 +188,21 @@ void ls_files(const char *path) {
     }
 
     file_count = 0;
+
+    if (s_hidden) {
+        strncpy(files[file_count++], ".", MAX_PATH);
+        strncpy(files[file_count++], "..", MAX_PATH);
+    }
+
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL && file_count < MAX_FILES) {
-        if (!s_hidden && entry->d_name[0] == '.') continue;
+        if (!s_hidden && entry->d_name[0] == '.') continue;  
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue; 
         strncpy(files[file_count++], entry->d_name, MAX_PATH);
     }
     closedir(dir);
+
+    qsort(files, file_count, MAX_PATH, compare);
 }
 
 void get_inf(const char *filename, char *info, size_t info_size) {
@@ -190,7 +236,7 @@ void get_inf(const char *filename, char *info, size_t info_size) {
     snprintf(info, info_size, "Size: %.2f %s | Modified: %s", size, unit, date);
 }
 
-void ui() {
+void UI() {
     clear();
     attron(A_BOLD);
     mvprintw(0, 0, "[ IFileManager ] - %s", path);
@@ -284,24 +330,38 @@ void ui() {
     refresh();
 }
 
-void rmfd(const char *filename) {
-    if (!conf_del(filename)) return;
-
-    char full_path[MAX_PATH];
-    snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
-
+void rmfd(const char *path) {
     struct stat st;
-    if (stat(full_path, &st) == 0) {
-        if (S_ISDIR(st.st_mode)) {
-            if (rmdir(full_path) != 0) {
-                mvprintw(LINES - 1, 0, "Error: Could not delete directory.");
-            }
-        } else {
-            if (remove(full_path) != 0) {
-                mvprintw(LINES - 1, 0, "Error: Could not delete file.");
-            }
+    if (stat(path, &st) != 0) {
+        perror("stat");
+        return;
+    }
+
+    if (S_ISDIR(st.st_mode)) {
+        DIR *dir = opendir(path);
+        if (!dir) {
+            perror("opendir");
+            return;
         }
-        ls_files(path);
+
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+
+            char full_path[MAX_PATH];
+            snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+
+            rmfd(full_path); 
+        }
+        closedir(dir);
+
+        if (rmdir(path) != 0) {
+            perror("rmdir");
+        }
+    } else {
+        if (remove(path) != 0) {
+            perror("remove");
+        }
     }
 }
 
@@ -309,62 +369,65 @@ void open_file(const char *filename) {
     char full_path[MAX_PATH];
     snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
 
+    def_prog_mode(); 
+    endwin();  
+
     const char *ext = strrchr(filename, '.');
     if (!ext) {
         char cmd[MAX_PATH + 50];
         snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path);
         system(cmd);
-        return;
-    }
+    } else {
+        ext++;
+        const char *image_formats[] = {"png", "jpg", "jpeg", "webp", "svg", "bmp", "gif", "tiff"};
+        const char *video_audio_formats[] = {
+            "mp3", "mp4", "wav", "ogg", "mkv", "webm", "flac", "avi", "mov", "m4a", "aac"
+        };
 
-    ext++;
-    const char *image_formats[] = {"png", "jpg", "jpeg", "webp", "svg", "bmp", "gif", "tiff"};
-    const char *video_audio_formats[] = {
-        "mp3", "mp4", "wav", "ogg", "mkv", "webm", "flac", "avi", "mov", "m4a", "aac"
-    };
-
-    for (size_t i = 0; i < sizeof(image_formats) / sizeof(image_formats[0]); i++) {
-        if (!strcasecmp(ext, image_formats[i])) {
-            char cmd[MAX_PATH + 50];
-            snprintf(cmd, sizeof(cmd), "%s '%s' &> /dev/null &", IMAGE_VIEWER, full_path);
-            system(cmd);
-            return;
+        int is_media = 0;
+        for (size_t i = 0; i < sizeof(image_formats) / sizeof(image_formats[0]); i++) {
+            if (!strcasecmp(ext, image_formats[i])) {
+                is_media = 1;
+                break;
+            }
         }
-    }
+        for (size_t i = 0; i < sizeof(video_audio_formats) / sizeof(video_audio_formats[0]); i++) {
+            if (!strcasecmp(ext, video_audio_formats[i])) {
+                is_media = 1;
+                break;
+            }
+        }
 
-    for (size_t i = 0; i < sizeof(video_audio_formats) / sizeof(video_audio_formats[0]); i++) {
-        if (!strcasecmp(ext, video_audio_formats[i])) {
+        if (is_media) {
             char cmd[MAX_PATH + 50];
             snprintf(cmd, sizeof(cmd), "%s '%s' &> /dev/null &", strstr(ext, "mp3") ? AUDIO_VIEWER : VIDEO_VIEWER, full_path);
             system(cmd);
-            return;
+        } else {
+            char cmd[MAX_PATH + 50];
+            snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path);
+            system(cmd);
         }
     }
 
-    char cmd[MAX_PATH + 50];
-    snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path);
-    system(cmd);
+    reset_prog_mode(); 
+    refresh();  
 }
 
 void cr_file() {
-    echo();
     char filename[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Enter filename: ");
-    getnstr(filename, MAX_NAME - 1);
-    noecho();
-
-    if (strlen(filename) > 0) {
-        char full_path[MAX_PATH];
-        snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
-        FILE *file = fopen(full_path, "w");
-        if (file) fclose(file);
+    if (esc(filename, MAX_NAME, "Enter filename")) {
+        if (strlen(filename) > 0) {
+            char full_path[MAX_PATH];
+            snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
+            FILE *file = fopen(full_path, "w");
+            if (file) fclose(file);
+        }
     }
 }
-
 void to_back() {
     if (chdir("..") == 0) {
         getcwd(path, sizeof(path));
-        ls_files(path);
+        list(path);
         selected = 0;
         offset = 0;
     }
@@ -375,32 +438,33 @@ void to_home() {
     if (home) {
         strncpy(path, home, sizeof(path));
         chdir(path);
-        ls_files(path);
+        list(path);
         selected = 0;
         offset = 0;
     }
 }
 
-void cr_dir() {
-    echo();
+void crt_dir() {
     char dirname[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Enter directory name: ");
-    getnstr(dirname, MAX_NAME - 1);
-    noecho();
-
-    if (strlen(dirname) > 0) {
-        char full_path[MAX_PATH];
-        snprintf(full_path, sizeof(full_path), "%s/%s", path, dirname);
-        mkdir(full_path, 0777);
+    if (esc(dirname, MAX_NAME, "Enter directory name")) {
+        if (strlen(dirname) > 0) {
+            char full_path[MAX_PATH];
+            snprintf(full_path, sizeof(full_path), "%s/%s", path, dirname);
+            mkdir(full_path, 0777);
+        }
     }
 }
 
-void rename_fd(const char *filename) {
-    echo();
+void ren(const char *filename) {
+    setlocale(LC_ALL, ""); 
+
     char new_name[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Enter new name: ");
-    getnstr(new_name, MAX_NAME - 1);
-    noecho();
+    strncpy(new_name, filename, MAX_NAME - 1);  
+    new_name[MAX_NAME - 1] = '\0';  
+
+    if (!esc(new_name, MAX_NAME, "New name")) {
+        return;  
+    }
 
     if (strlen(new_name) > 0) {
         char old_path[MAX_PATH];
@@ -408,10 +472,15 @@ void rename_fd(const char *filename) {
         snprintf(old_path, sizeof(old_path), "%s/%s", path, filename);
         snprintf(new_path, sizeof(new_path), "%s/%s", path, new_name);
 
+        if (access(new_path, F_OK) == 0) {
+            mvprintw(LINES - 1, 0, "Error: File with this name already exists.");
+            return;
+        }
+
         if (rename(old_path, new_path) != 0) {
             mvprintw(LINES - 1, 0, "Error: Could not rename file.");
         } else {
-            ls_files(path);
+            list(path);  
         }
     }
 }
@@ -421,12 +490,12 @@ int dirt(const char *path) {
     return (stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
 }
 
-void custom_view(const char *filename) {
-    echo();  
+void UC_view(const char *filename) {
     char viewer[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Enter viewer: ");
-    getnstr(viewer, MAX_NAME - 1);  
-    noecho(); 
+
+    if (!esc(viewer, MAX_NAME, "Enter viewer")) {
+        return;  
+    }
 
     if (strlen(viewer) > 0) {
         char full_path[MAX_PATH];
@@ -462,25 +531,189 @@ void custom_view(const char *filename) {
             char cmd[MAX_PATH + 50];
             snprintf(cmd, sizeof(cmd), "%s '%s' &> /dev/null &", viewer, full_path);
             system(cmd);
+            cls(); 
         } else {
             def_prog_mode(); 
-            endwin(); 
+            endwin();
 
             pid_t pid = fork();
-            if (pid == 0) {  
+            if (pid == 0) { 
                 execlp(viewer, viewer, full_path, (char *)NULL);
                 perror("execlp failed");
                 exit(EXIT_FAILURE);
             } else if (pid > 0) {  
                 int status;
-                waitpid(pid, &status, 0);
+                waitpid(pid, &status, 0);  
             } else {
                 perror("fork failed");
             }
 
-            reset_prog_mode();  
-            refresh();
+            reset_prog_mode(); 
+            refresh();  
         }
+    }
+}
+
+
+void Command() {
+    echo();
+    curs_set(1);
+    wchar_t command[MAX_NAME] = {0};
+    int pos = 0;
+    int tab_index = -1;
+    char matches[MAX_FILES][MAX_NAME];
+    int match_count = 0;
+
+    while (1) {
+        move(LINES - 2, 0);  
+        clrtoeol(); 
+        mvprintw(LINES - 2, 0, ":%ls", command);
+        move(LINES - 2, pos + 1); 
+        refresh();
+
+        wint_t ch;
+        get_wch(&ch);
+
+        if (ch == '\t') {
+            if (wcsncmp(command, L"cd ", 3) == 0) {
+                wchar_t prefix[MAX_NAME] = {0};
+                wcsncpy(prefix, command + 3, pos - 3);
+
+                if (tab_index == -1) {
+                    match_count = 0;
+                    DIR *dir = opendir(".");
+                    if (dir) {
+                        struct dirent *entry;
+                        while ((entry = readdir(dir)) != NULL) {
+                            struct stat st;
+                            if (stat(entry->d_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+                                wchar_t wname[MAX_NAME];
+                                mbstowcs(wname, entry->d_name, MAX_NAME);
+                                if (wcsncmp(wname, prefix, wcslen(prefix)) == 0) {
+                                    wcstombs(matches[match_count++], wname, MAX_NAME);
+                                }
+                            }
+                        }
+                        closedir(dir);
+                    }
+
+                    if (match_count == 0) continue;
+
+                    if (match_count > 1) {
+                        wchar_t common_prefix[MAX_NAME] = {0};
+                        mbstowcs(common_prefix, matches[0], MAX_NAME);
+
+                        for (int i = 1; i < match_count; i++) {
+                            int j = 0;
+                            wchar_t wmatch[MAX_NAME];
+                            mbstowcs(wmatch, matches[i], MAX_NAME);
+                            while (common_prefix[j] && wmatch[j] && common_prefix[j] == wmatch[j]) {
+                                j++;
+                            }
+                            common_prefix[j] = '\0';
+                        }
+
+                        if (wcslen(common_prefix) > wcslen(prefix)) {
+                            wcsncpy(command + 3, common_prefix, MAX_NAME - 3);
+                            pos = 3 + wcslen(common_prefix);
+                            continue;
+                        }
+                    }
+                }
+
+                if (match_count > 0) {
+                    tab_index = (tab_index + 1) % match_count;
+                    wchar_t wmatch[MAX_NAME];
+                    mbstowcs(wmatch, matches[tab_index], MAX_NAME);
+                    wcsncpy(command + 3, wmatch, MAX_NAME - 3);
+                    pos = 3 + wcslen(wmatch);
+                }
+            } else if (wcscmp(command, L"cd") == 0) {
+                if (tab_index == -1) {
+                    match_count = 0;
+                    DIR *dir = opendir(".");
+                    if (dir) {
+                        struct dirent *entry;
+                        while ((entry = readdir(dir)) != NULL) {
+                            struct stat st;
+                            if (stat(entry->d_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+                                if (entry->d_name[0] == '.' && !s_hidden) continue;
+                                wchar_t wname[MAX_NAME];
+                                mbstowcs(wname, entry->d_name, MAX_NAME);
+                                wcstombs(matches[match_count++], wname, MAX_NAME);
+                            }
+                        }
+                        closedir(dir);
+                    }
+                }
+
+                if (match_count > 0) {
+                    tab_index = (tab_index + 1) % match_count;
+                    wchar_t wmatch[MAX_NAME];
+                    mbstowcs(wmatch, matches[tab_index], MAX_NAME);
+                    wcsncpy(command + 3, wmatch, MAX_NAME - 3);
+                    pos = 3 + wcslen(wmatch);
+                }
+            }
+        } else if (ch == 127 || ch == KEY_BACKSPACE) {
+            if (pos > 0) {
+                memmove(command + pos - 1, command + pos, (wcslen(command) - pos + 1) * sizeof(wchar_t));
+                pos--;
+                tab_index = -1;
+            }
+        } else if (ch == KEY_DC) {
+            if (pos < wcslen(command)) {
+                memmove(command + pos, command + pos + 1, (wcslen(command) - pos) * sizeof(wchar_t));
+                tab_index = -1;
+            }
+        } else if (ch == KEY_LEFT) {
+            if (pos > 0) pos--;
+        } else if (ch == KEY_RIGHT) {
+            if (pos < wcslen(command)) pos++;
+        } else if (ch == '\n') {
+            break;
+        } else if (ch >= 32 && ch <= 126) {
+            if (pos < MAX_NAME - 1) {
+                memmove(command + pos + 1, command + pos, (wcslen(command) - pos + 1) * sizeof(wchar_t));
+                command[pos++] = ch;
+                tab_index = -1;
+            }
+        }
+    }
+
+    noecho();
+    curs_set(0);
+
+    char command_str[MAX_NAME];
+    wcstombs(command_str, command, MAX_NAME);
+
+    if (strncmp(command_str, "cd ", 3) == 0) {
+        char dir[MAX_NAME];
+        strncpy(dir, command_str + 3, MAX_NAME);
+        if (chdir(dir) == 0) {
+            getcwd(path, sizeof(path));
+            list(path);
+            selected = 0;
+            offset = 0;
+        } else {
+            mvprintw(LINES - 1, 0, "Error: Directory not found.");
+        }
+    } else if (strcmp(command_str, "h") == 0) {
+        s_hidden = 1;
+        list(path);
+    } else if (strcmp(command_str, "uh") == 0) {
+        s_hidden = 0;
+        list(path);
+    } else if (strcmp(command_str, "q") == 0) {
+        clear();
+        endwin();
+        exit(0);
+    } else if (strcmp(command_str, "gg") == 0) {
+        selected = 0;
+    } else if (strcmp(command_str, "g") == 0) {
+        selected = file_count - 1;
+    } else {
+        mvprintw(LINES - 1, 0, "Unknown command.");
     }
 }
 
@@ -503,11 +736,11 @@ int main(int argc, char *argv[]) {
         getcwd(path, sizeof(path));
     }
 
-    ls_files(path);
+    list(path);
     strncpy(lpath, path, sizeof(lpath));
 
     while (1) {
-        ui();
+        UI();
         int ch = getch();
 
         if (ch == KEY_MOUSE) {
@@ -524,7 +757,7 @@ int main(int argc, char *argv[]) {
                             strncpy(lpath, path, sizeof(lpath));
                             chdir(full_path);
                             getcwd(path, sizeof(path));
-                            ls_files(path);
+                            list(path);
                             selected = 0;
                             offset = 0;
                         } else {
@@ -541,20 +774,16 @@ int main(int argc, char *argv[]) {
             }
         } else if (ch == 27) {
             ch = getch();
-            if (ch == 'a') {
-                help_view();
-            } else if (ch == 'h') {
-                to_home();
-            }
+                if (ch == 'h') {
+                    to_home();
+                }
 
         } else {
             switch (ch) {
                 case 'q':
-                    if (conf_ex()) {
-                        clear();
-                        endwin();
-                        return 0;
-                    }
+                    clear();
+                    endwin();
+                    return 0;
                     break;
                 case 'h':
                     to_back();
@@ -573,7 +802,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'u':
                     s_hidden = !s_hidden;
-                    ls_files(path);
+                    list(path);
                     break;
                 case 10:
                 case 'l': {
@@ -584,7 +813,7 @@ int main(int argc, char *argv[]) {
                         strncpy(lpath, path, sizeof(lpath));
                         chdir(full_path);
                         getcwd(path, sizeof(path));
-                        ls_files(path);
+                        list(path);
                         selected = 0;
                         offset = 0;
                     } else {
@@ -592,27 +821,37 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                case KEY_DC:
-                    rmfd(files[selected]);
-                    ls_files(path);
-                    selected = 0;
+                case KEY_DC: {
+                    char full_path[MAX_PATH];
+                    snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
+                
+                    if (conf_del(files[selected])) {  
+                        rmfd(full_path); 
+                        list(path);  
+                        selected = 0;  
+                    }
                     break;
-                case 'd':
-                    cr_dir();
-                    ls_files(path);
+                }
+                case 'm':
+                    crt_dir();
+                    list(path);
                     break;
                 case 't':
                     cr_file();
-                    ls_files(path);
+                    list(path);
                     break;
                 case 'r':
-                    rename_fd(files[selected]);
+                    ren(files[selected]);
                     break;
-                case 'c':
-                    custom_view(files[selected]);
+                case '\\':
+                    UC_view(files[selected]);
                     break;
                 case KEY_F(1):  // F1
                     help_view();
+                    break;
+
+                case ':':
+                    Command();
                     break;
             }
         }
@@ -621,3 +860,4 @@ int main(int argc, char *argv[]) {
     endwin();
     return 0;
 }
+
