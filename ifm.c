@@ -148,13 +148,26 @@ void help_view() {
     fprintf(pager, "  [C]          Open with custom viewer\n");
     fprintf(pager, "  [Q]          Exit\n");
     fprintf(pager, "  [F1]         Help\n");
+    fprintf(pager, "  [:]          Enter command mode\n");
+    fprintf(pager, "  [G]          Go to the first file\n");
+    fprintf(pager, "  [B]          Go to the last file\n");
+    fprintf(pager, "  [\\]          Open with custom viewer\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "Command Mode:\n");
+    fprintf(pager, "  [cd <dir>]   Change directory\n");
+    fprintf(pager, "  [h]          Show hidden files\n");
+    fprintf(pager, "  [uh]         Hide hidden files\n");
+    fprintf(pager, "  [q]          Quit\n");
+    fprintf(pager, "  [gg]         Go to the first file\n");
+    fprintf(pager, "  [g]          Go to the last file\n");
+    fprintf(pager, "\n");
+    fprintf(pager, "Mouse Controls:\n");
+    fprintf(pager, "  [Left Click] Select/Open file/dir\n");
+    fprintf(pager, "  [Right Click] Go back\n");
+    fprintf(pager, "  [Scroll Up] Move up\n");
+    fprintf(pager, "  [Scroll Down] Move down\n");
     fprintf(pager, "\n");
     fprintf(pager, "\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "\n");
-
 
     pclose(pager); 
 
