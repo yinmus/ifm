@@ -151,7 +151,7 @@ void help_view() {
     fprintf(pager, "  [:]          Enter command mode\n");
     fprintf(pager, "  [G]          Go to the first file\n");
     fprintf(pager, "  [B]          Go to the last file\n");
-    fprintf(pager, "  [\\]          Open with custom viewer\n");
+    fprintf(pager, "  [\]          Open with custom viewer\n");
     fprintf(pager, "\n");
     fprintf(pager, "Command Mode:\n");
     fprintf(pager, "  [cd <dir>]   Change directory\n");
