@@ -31,7 +31,7 @@ make help
 ```
 make uninstall
 ```
-[F1] - Help View in the file manager
+### [F1] - Help View in the file manager
 #### Weight - 60Kb
 ___
 =======================================================================================
