@@ -938,14 +938,14 @@ void abmenu() {
         wattron(win, COLOR_PAIR(1));
         box(win, 0, 0);
         wattroff(win, COLOR_PAIR(1));
-        mvwprintw(win, 1, 1, "Меню:");
-        mvwprintw(win, 2, 1, "──────────────");
+        mvwprintw(win, 1, 1, "IFM");
+        mvwprintw(win, 2, 1, "Lightweight file text manager.");
 
         for (int i = 0; i < menu_count; i++) {
             if (i == menu_selected) {
                 wattron(win, A_REVERSE);
             }
-            mvwprintw(win, i + 3, 1, "%s", menu_items[i]);
+            mvwprintw(win, i + 4, 1, "%s", menu_items[i]);
             if (i == menu_selected) {
                 wattroff(win, A_REVERSE);
             }
