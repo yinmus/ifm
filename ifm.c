@@ -653,7 +653,7 @@ void Command() {
                     DIR *dir = opendir(".");
                     if (dir) {
                         struct dirent *entry;
-                        while ((entry = readdir(dir)) != NULL) {
+                        while ((entry = readdir(dir)) != NULL && match_count < MAX_FILES) {
                             struct stat st;
                             if (stat(entry->d_name, &st) == 0 && S_ISDIR(st.st_mode)) {
                                 if (entry->d_name[0] == '.' && !s_hidden) continue;
