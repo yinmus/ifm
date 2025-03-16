@@ -27,10 +27,7 @@ make help
 ```
 ifm
 ```
-6. Удалить все
-```
-make uninstall
-```
+
 
 ### [F1] - Help View in the file manager
 #### Weight - 60Kb
