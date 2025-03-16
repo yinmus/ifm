@@ -31,6 +31,11 @@ make help
 ```
 make uninstall
 ```
+7. Запуск
+```
+ifm
+```
+
 ### [F1] - Help View in the file manager
 #### Weight - 60Kb
 ___
