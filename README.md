@@ -1,5 +1,5 @@
 IFM - light, easy file manager
-__
+___
 Текстовый файловый менеджер, использующий ncurses. 
 ____
 
