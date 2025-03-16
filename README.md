@@ -19,21 +19,17 @@ cd ifm
 ```
 make install
 ```
-4. Компиляция 
-```
-make
-```
-5. Справка по Makefile
+4. Справка по Makefile
 ```
 make help
+```
+5. Запуск
+```
+ifm
 ```
 6. Удалить все
 ```
 make uninstall
-```
-7. Запуск
-```
-ifm
 ```
 
 ### [F1] - Help View in the file manager
