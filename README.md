@@ -6,6 +6,7 @@ ____
 
 ### Installation:
 
+The `make install` command installs IFM by first removing any existing binary to prevent conflicts, then copying the newly compiled binary to /usr/bin/. It also installs the desktop entry in /usr/share/applications/ and places the application icon in the system icons directory for proper integration. Additionally, it creates a documentation directory in /usr/share/ifm, copies relevant documentation files, and updates the desktop database to ensure IFM appears correctly in application menus.
 
 ```
 make install
