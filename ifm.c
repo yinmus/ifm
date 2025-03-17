@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <limits.h> 
 #include <string.h>
 #include <unistd.h>
 #include <locale.h>
@@ -168,6 +169,19 @@ int esc(char *buffer, int max_len, const char *prompt) {
     return 1;  
 }
 
+void hsterm() {
+    printf("IFM - Lightweight Ncurses File Manager\n\n");
+    printf("Usage: ifm [OPTION] [PATH]\n\n");
+    printf("Options:\n");
+    printf("  -h, -?    Show this help message\n");
+    printf("  PATH      Open the specified directory (default: current directory)\n\n");
+    printf("Examples:\n");
+    printf("  ifm                     Open current directory\n");
+    printf("  ifm Documents           Open 'Documents' directory\n");
+    printf("  ifm -h                  Show this help message\n");
+    printf("  ifm -?                  Open the menu\n");
+}
+
 void help_view() {
     def_prog_mode();
     endwin();
@@ -182,30 +196,30 @@ void help_view() {
     fprintf(pager, "IFM - Lightweight Ncurses File Manager\n");
     fprintf(pager, "======================================\n");
     fprintf(pager, "Controls:\n");
-    fprintf(pager, "  [K/J]        Move up/down\n");
-    fprintf(pager, "  [Enter/L]    Open file/dir\n");
-    fprintf(pager, "  [H]          Go back\n");
-    fprintf(pager, "  [U]          Toggle hidden files\n");
-    fprintf(pager, "  [Alt + H]    Go home\n");
-    fprintf(pager, "  [T]          Create file\n");
-    fprintf(pager, "  [M]          Create dir\n");
-    fprintf(pager, "  [Delete]     Delete file/dir\n");
-    fprintf(pager, "  [R]          Rename file/dir\n");
-    fprintf(pager, "  [SHIFT+O]    Open with custom viewer\n");
-    fprintf(pager, "  [Q]          Exit\n");
-    fprintf(pager, "  [F1]         Help\n");
-    fprintf(pager, "  [F2]         Open menu (LICENSE, COMMANDS, ABOUT)\n");
-    fprintf(pager, "  [:]          Enter command mode\n");
-    fprintf(pager, "  [SHIFT+G]    Go to the first file\n");
-    fprintf(pager, "  [G]          Go to the last file\n");
+    fprintf(pager, "  [K/J]         Move up/down\n");
+    fprintf(pager, "  [Enter/L]     Open file/dir\n");
+    fprintf(pager, "  [H]           Go back\n");
+    fprintf(pager, "  [CTRL + H]    Toggle hidden files\n");
+    fprintf(pager, "  [Alt + H]     Go home\n");
+    fprintf(pager, "  [T]           Create file\n");
+    fprintf(pager, "  [M]           Create dir\n");
+    fprintf(pager, "  [DEL]         Delete file/dir\n");
+    fprintf(pager, "  [R]           Rename file/dir\n");
+    fprintf(pager, "  [SHIFT+O]     Open with custom viewer\n");
+    fprintf(pager, "  [Q]           Exit\n");
+    fprintf(pager, "  [F1]          Help\n");
+    fprintf(pager, "  [F2]          Open help menu\n");
+    fprintf(pager, "  [:]           Enter command mode\n");
+    fprintf(pager, "  [gg]          Go to the first file\n");
+    fprintf(pager, "  [G]           Go to the last file\n");
     fprintf(pager, "\n");
     fprintf(pager, "Command Mode:\n");
-    fprintf(pager, "  [cd <dir>]   Change directory\n");
-    fprintf(pager, "  [h]          Show hidden files\n");
-    fprintf(pager, "  [uh]         Hide hidden files\n");
-    fprintf(pager, "  [q]          Quit\n");
-    fprintf(pager, "  [G]          Go to the first file\n");
-    fprintf(pager, "  [g]          Go to the last file\n");
+    fprintf(pager, "  [cd <dir>]    Change directory\n");
+    fprintf(pager, "  [h]           Show hidden files\n");
+    fprintf(pager, "  [uh]          Hide hidden files\n");
+    fprintf(pager, "  [q]           Quit\n");
+    fprintf(pager, "  [G]           Go to the first file\n");
+    fprintf(pager, "  [g]           Go to the last file\n");
     fprintf(pager, "\n");
     fprintf(pager, "Mouse Controls:\n");
     fprintf(pager, "  [Left Click]  Select/Open file/dir\n");
@@ -227,11 +241,11 @@ int conf_del(const char *filename) {
     curs_set(1);
     echo();
     char response[MAX_NAME];
-    mvprintw(LINES - 2, 0, "Delete %s? (y/n): ", filename);
+    mvprintw(LINES - 2, 0, "Delete %s? (Y/n): ", filename);
     getnstr(response, MAX_NAME - 1);
     noecho();
     curs_set(0);
-    return (response[0] == 'y' || response[0] == 'Y');
+    return (response[0] == 'y' || response[0] == 'Y' || response[0] == '\0');
 }
 
 int compare(const void *a, const void *b) {
@@ -293,6 +307,21 @@ void get_inf(const char *filename, char *info, size_t info_size) {
 
     snprintf(info, info_size, "Size: %.2f %s | Modified: %s", size, unit, date);
 }
+
+void hs_path(const char *relative_path, char *absolute_path) {
+    if (relative_path[0] == '/') {
+        strncpy(absolute_path, relative_path, PATH_MAX);
+    } else {
+        char cwd[PATH_MAX];
+        if (getcwd(cwd, sizeof(cwd)) != NULL) {
+            snprintf(absolute_path, PATH_MAX, "%s/%s", cwd, relative_path);
+        } else {
+            perror("getcwd");
+            strncpy(absolute_path, relative_path, PATH_MAX);
+        }
+    }
+}
+
 
 void UI() {
     clear();
@@ -437,6 +466,7 @@ void open_file(const char *filename) {
         char cmd[MAX_PATH + 50];
         snprintf(cmd, sizeof(cmd), "%s '%s'", DEFAULT_VIEWER, full_path);
         system(cmd);
+        
     } else {
         ext++;
         const char *image_formats[] = {"png", "jpg", "jpeg", "webp", "svg", "bmp", "gif", "tiff"};
@@ -491,12 +521,24 @@ void cr_file() {
         }
     }
 }
+
 void to_back() {
+    char current_path[PATH_MAX];
+    getcwd(current_path, sizeof(current_path));
+
+    const char *home_dir = getenv("HOME");
+    if (home_dir && strcmp(current_path, home_dir) == 0) {
+        mvprintw(LINES - 1, 0, "Already in home directory.");
+        return;
+    }
+
     if (chdir("..") == 0) {
         getcwd(path, sizeof(path));
         list(path);
         selected = 0;
         offset = 0;
+    } else {
+        mvprintw(LINES - 1, 0, "Error: Could not go back.");
     }
 }
 
@@ -991,6 +1033,31 @@ void abmenu() {
 
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "ru_RU.UTF-8");
+
+    if (argc > 1) {
+        if (strcmp(argv[1], "-h") == 0) {
+            hsterm();
+            return 0;
+        } else if (strcmp(argv[1], "-?") == 0) {
+            initscr();
+            noecho();
+            curs_set(0);
+            keypad(stdscr, TRUE);
+            start_color();
+            init_pair(1, COLOR_CYAN, COLOR_BLACK);
+            init_pair(2, COLOR_GREEN, COLOR_BLACK);
+
+            abmenu();  
+
+            endwin();  
+            return 0;
+        } else {
+            hs_path(argv[1], path);
+        }
+    } else {
+        getcwd(path, sizeof(path));
+    }
+
     initscr();
     noecho();
     curs_set(0);
@@ -1001,16 +1068,10 @@ int main(int argc, char *argv[]) {
 
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     mouseinterval(0);
-
-    if (argc > 1) {
-        strncpy(path, argv[1], sizeof(path));
-    } else {
-        getcwd(path, sizeof(path));
-    }
-
+    
     list(path);
     strncpy(lpath, path, sizeof(lpath));
-
+    
     while (1) {
         UI();
         int ch = getch();
@@ -1057,31 +1118,41 @@ int main(int argc, char *argv[]) {
                     endwin();
                     return 0;
                     break;
-                case 'h':
+                case 'h': 
+                case KEY_LEFT:
                     to_back();
                     break;
-                case 'k':
+                case 'k': 
+                case KEY_UP:
                     if (selected > 0) selected--;
                     break;
                 case 'j':
+                case KEY_DOWN:
                     if (selected < file_count - 1) selected++;
                     break;
-                case 'g':
+                case 'G': 
                     selected = file_count - 1;
                     break;
-                case 'G':
-                    selected = 0;
+                case 'g': { 
+                    int next = getch();
+                    if (next == 'g') {
+                        selected = 0;
+                    } else {
+                        ungetch(next);
+                    }
                     break;
-                case 'u':
+                }
+                case 8: 
                     s_hidden = !s_hidden;
                     list(path);
                     break;
-                case 10:
-                case 'l': {
+                case 10: 
+                case 'l': 
+                case KEY_RIGHT: {
                     char full_path[MAX_PATH];
                     snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
-
-                    if (dirt(full_path)) {
+                
+                    if (dirt(full_path)) { 
                         strncpy(lpath, path, sizeof(lpath));
                         chdir(full_path);
                         getcwd(path, sizeof(path));
@@ -1093,7 +1164,7 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                case KEY_DC: {
+                case KEY_DC: { 
                     char full_path[MAX_PATH];
                     snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
                 
@@ -1104,7 +1175,8 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                case 'm':
+            
+               case 'm':
                     crt_dir();
                     list(path);
                     break;
