@@ -1,3 +1,5 @@
 DOCS FILES DIR
 
-![a](https://github.com/yinmus/ifm/edit/master/docs/ABOUT)
+![ABOUT](https://github.com/yinmus/ifm/edit/master/docs/ABOUT)
+
+![COMMANDS](https://github.com/yinmus/ifm/edit/master/docs/COMMANDS)
