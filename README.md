@@ -4,41 +4,18 @@
 
 ____
 
-Установка:
+### Installation:
 
-1. Клонируйте репо 
-```
-git clone https://github.com/yinmus/ifm.git
-```
-2. Перейдите в директорию
-```
-cd ifm
-```
-3. Запустите установку
+
 ```
 make install
 ```
-4. Справка по Makefile
-```
-make help
-```
-5. Запуск
-```
-ifm
-```
+
 ____
 
-### [F1] - Help View in the file manager
+### [F1] - Call for help
 #### Weight - 60Kb
 ___
 
-
-Для полного удаления: make uninstall
-
-___
-
-LICENSE : MIT
-
-___
-
 ###### p.s.  Автодополнения команды :cd не идеально работает
+###### [LICENSE](LICENSE) : [MIT](https://en.wikipedia.org/wiki/MIT_License)
