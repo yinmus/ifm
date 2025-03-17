@@ -6,10 +6,16 @@ ____
 
 ### Installation:
 
-The `make install` command installs IFM by first removing any existing binary to prevent conflicts, then copying the newly compiled binary to /usr/bin/. It also installs the desktop entry in /usr/share/applications/ and places the application icon in the system icons directory for proper integration. Additionally, it creates a documentation directory in /usr/share/ifm, copies relevant documentation files, and updates the desktop database to ensure IFM appears correctly in application menus.
+The `make install ins=0` command compiles the `ifm` binary and installs it by copying necessary files: documentation (`ABOUT`, `COMMANDS`, `LICENSE`) to `/usr/share/ifm`, the icon (`ifm.png`) to `/usr/share/icons/hicolor/128x128/apps/`, and the desktop entry (`ifm.desktop`) to `/usr/share/applications/`. It also updates the desktop database to ensure proper system integration.
 
 ```
-make install
+make install ins=0
+```
+
+The `make install ins=1` command performs the same installation process as `make install ins=0`, but after successful installation, it removes the ifm source directory to keep the workspace clean.
+
+```
+make install ins=1
 ```
 
 The `make uninstall` command removes the IFM binary, desktop entry, and icon, deletes documentation files, updates system caches, and cleans up empty directories.
@@ -24,5 +30,8 @@ ____
 #### Weight - 60Kb
 ___
 
-###### p.s.  Автодополнения команды :cd не идеально работает
+
+
+
+###### p.s.  Автодополнения команды :cd работает не очень хорошо
 ###### [LICENSE](LICENSE) : [MIT](https://en.wikipedia.org/wiki/MIT_License)
