@@ -18,62 +18,72 @@ $(BIN): $(SRC)
 clean:
 	rm -f $(BIN)
 
-install: $(BIN)
-	@if [ -f "$(PREFIX)/$(BIN)" ]; then \
-		echo "Удаляется старый бинарник $(PREFIX)/$(BIN)"; \
-		sudo rm -f "$(PREFIX)/$(BIN)"; \
+install:
+	@if [ "$(ins)" = "0" ] || [ "$(ins)" = "1" ]; then \
+		$(MAKE) install_base; \
+		if [ "$(ins)" = "1" ]; then \
+			echo "Removing source directory ifm"; \
+			cd .. && rm -rf ifm; \
+		fi \
+	else \
+		echo "Usage: make install ins=0 or make install ins=1"; \
 	fi
-	@echo "Копируется новый бинарник в $(PREFIX)"
+
+install_base:
+	@echo "Compiling and installing $(BIN)"
+	$(MAKE) all
+
+	@echo "Installing binary to $(PREFIX)"
 	sudo install -m 755 $(BIN) $(PREFIX)
-	
-	@echo "Копируется $(DESKTOP_FILE) в /usr/share/applications/"
+
+	@echo "Installing $(DESKTOP_FILE) to /usr/share/applications/"
 	sudo install -m 644 $(DESKTOP_FILE) /usr/share/applications/
 
-	@echo "Копируется иконка в $(ICON_DEST)"
+	@echo "Installing icon to $(ICON_DEST)"
 	sudo install -m 644 $(ICON_SRC) $(ICON_DEST)
 
-	@echo "Создание директории для документации $(DOC_DIR)"
+	@echo "Creating documentation directory $(DOC_DIR)"
 	sudo mkdir -p $(DOC_DIR)
 
-	@echo "Копирование файлов документации в $(DOC_DIR)"
+	@echo "Copying documentation files to $(DOC_DIR)"
 	for file in $(DOC_FILES); do \
 		sudo install -m 644 $$file $(DOC_DIR); \
 	done
 
-	@echo "Обновление кеша .desktop файлов"
+	@echo "Updating desktop database"
 	sudo update-desktop-database /usr/share/applications/
 
-	@echo "Установка завершена"
+	@echo "Installation completed"
 
 uninstall:
-	@echo "Удаление бинарника $(PREFIX)/$(BIN)"
+	@echo "Removing binary $(PREFIX)/$(BIN)"
 	sudo rm -f $(PREFIX)/$(BIN)
 
-	@echo "Удаление .desktop файла"
+	@echo "Removing .desktop file"
 	sudo rm -f /usr/share/applications/$(DESKTOP_FILE)
 
-	@echo "Удаление иконки"
+	@echo "Removing icon"
 	sudo rm -f $(ICON_DEST)
 
-	@echo "Удаление файлов документации из $(DOC_DIR)"
+	@echo "Removing documentation files from $(DOC_DIR)"
 	for file in $(DOC_FILES); do \
 		sudo rm -f $(DOC_DIR)/$$file; \
 	done
-	@echo "Удаление директории документации $(DOC_DIR), если она пуста"
+
+	@echo "Removing documentation directory if empty"
 	sudo rmdir --ignore-fail-on-non-empty $(DOC_DIR)
 
-	@echo "Обновление кеша .desktop файлов"
+	@echo "Updating desktop and icon caches"
 	sudo update-desktop-database /usr/share/applications/
-
-	@echo "Обновление кеша иконок"
 	sudo gtk-update-icon-cache /usr/share/icons/hicolor/
 
-	@echo "Удаление завершено"
+	@echo "Uninstallation completed"
 
 help:
-	@echo "Доступные команды:"
-	@echo "  make        - Собрать $(BIN)"
-	@echo "  make clean  - Удалить скомпилированный файл"
-	@echo "  make install    - Установить в $(PREFIX) и скопировать файлы"
-	@echo "  make uninstall  - Удалить из $(PREFIX) и удалить файлы"
-	@echo "  make help   - Показать это сообщение"
+	@echo "Available commands:"
+	@echo "  make          - Compile $(BIN)"
+	@echo "  make clean    - Remove compiled binary"
+	@echo "  make install ins=0 - Compile and install"
+	@echo "  make install ins=1 - Install and delete 'ifm' source directory"
+	@echo "  make uninstall - Uninstall $(BIN)"
+	@echo "  make help     - Show this help message"
