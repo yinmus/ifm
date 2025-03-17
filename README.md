@@ -12,6 +12,12 @@ The `make install` command installs IFM by first removing any existing binary to
 make install
 ```
 
+The `make uninstall` command removes the IFM binary, desktop entry, and icon, deletes documentation files, updates system caches, and cleans up empty directories.
+
+```
+make uninstall
+```
+
 ____
 
 ### [F1] - Call for help
