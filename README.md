@@ -1,4 +1,4 @@
-![IFM](ifm-logo.png)
+
 
 IFM - light, easy file manager
 ___
