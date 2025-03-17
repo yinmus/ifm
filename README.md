@@ -1,11 +1,8 @@
+# IFM - light, easy text file manager
 
+<img src="logo-ifm.png" alt="scr" width="750">
 
-IFM - light, easy file manager
-___
-Текстовый файловый менеджер, использующий ncurses. 
 ____
-
-
 
 Установка:
 
@@ -29,7 +26,7 @@ make help
 ```
 ifm
 ```
-
+____
 
 ### [F1] - Help View in the file manager
 #### Weight - 60Kb
