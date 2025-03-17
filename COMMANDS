@@ -4,7 +4,7 @@ Controls:
   [K/J]        Move up/down
   [Enter/L]    Open file/dir
   [H]          Go back
-  [U]          Toggle hidden files
+  [CTRL + H]   Toggle hidden files
   [Alt + H]    Go home
   [T]          Create file
   [M]          Create dir
@@ -15,7 +15,7 @@ Controls:
   [F1]         Help
   [F2]         Open menu (LICENSE, COMMANDS, ABOUT)
   [:]          Enter command mode
-  [SHIFT+G]    Go to the first file
+  [gg]         Go to the first file
   [G]          Go to the last file
 
 Command Mode:
@@ -25,6 +25,7 @@ Command Mode:
   [q]          Quit
   [G]          Go to the first file
   [g]          Go to the last file
+
 
 Mouse Controls:
   [Left Click]  Select/Open file/dir
