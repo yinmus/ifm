@@ -1,3 +1,5 @@
+![IFM](ifm-logo.png)
+
 IFM - light, easy file manager
 ___
 Текстовый файловый менеджер, использующий ncurses. 
