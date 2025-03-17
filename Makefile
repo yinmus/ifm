@@ -7,7 +7,7 @@ PREFIX = /usr/bin
 DESKTOP_FILE = assets/ifm.desktop
 ICON_SRC = assets/ifm.svg
 ICON_DEST = /usr/share/icons/hicolor/128x128/apps/ifm.png
-DOC_FILES = ABOUT COMMANDS LICENSE
+DOC_FILES = docs/ABOUT docs/COMMANDS LICENSE
 DOC_DIR = /usr/share/ifm
 
 all: $(BIN)
