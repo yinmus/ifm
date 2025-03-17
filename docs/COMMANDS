@@ -26,6 +26,15 @@ Command Mode:
   [G]          Go to the first file
   [g]          Go to the last file
 
+Launch commands:
+  Usage:
+     ifm [OPTION] 
+     ifm [PATH]
+  Examples:
+     ifm                     Open current directory
+     ifm Documents           Open 'Documents' directory
+     ifm -h                  Show this help message
+     ifm -?                  Open help menu
 
 Mouse Controls:
   [Left Click]  Select/Open file/dir
