@@ -235,7 +235,199 @@ void help_view() {
     refresh();
 }
 
+void fcontent(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        mvprintw(LINES - 1, 0, "Ошибка: файл %s не найден.", filename);
+        refresh();
+        getch();
+        return;
+    }
 
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = malloc(file_size + 1);
+    if (!buffer) {
+        fclose(file);
+        mvprintw(LINES - 1, 0, "Ошибка: не удалось выделить память.");
+        refresh();
+        getch();
+        return;
+    }
+
+    fread(buffer, 1, file_size, file);
+    buffer[file_size] = '\0';
+    fclose(file);
+
+    int win_height = LINES / 2;
+    int win_width = COLS / 2;
+    int start_y = (LINES - win_height) / 2;
+    int start_x = (COLS - win_width) / 2;
+
+    WINDOW *win = newwin(win_height, win_width, start_y, start_x);
+    keypad(win, TRUE);
+    wattron(win, COLOR_PAIR(1));
+    box(win, 0, 0);
+    wattroff(win, COLOR_PAIR(1));
+
+    int max_lines = win_height - 2;
+    int max_cols = win_width - 2;  
+
+    char *lines[1024];
+    int line_count = 0;
+    char *line = strtok(buffer, "\n");
+    while (line != NULL && line_count < 1023) {
+        int line_length = strlen(line);
+        int start_pos = 0;
+
+        while (start_pos < line_length) {
+            int chunk_length = max_cols;
+            if (start_pos + chunk_length > line_length) {
+                chunk_length = line_length - start_pos;
+            }
+
+            lines[line_count] = malloc(chunk_length + 1);
+            if (!lines[line_count]) {
+                for (int i = 0; i < line_count; i++) {
+                    free(lines[i]);
+                }
+                free(buffer);
+                fclose(file);
+                return;
+            }
+
+            strncpy(lines[line_count], line + start_pos, chunk_length);
+            lines[line_count][chunk_length] = '\0';
+            start_pos += chunk_length;
+            line_count++;
+        }
+
+        line = strtok(NULL, "\n");
+    }
+
+    int offset = 0;
+
+    while (1) {
+        werase(win);
+        wattron(win, COLOR_PAIR(1));
+        box(win, 0, 0);
+        wattroff(win, COLOR_PAIR(1));
+
+        for (int i = 0; i < max_lines && i + offset < line_count; i++) {
+            mvwprintw(win, i + 1, 1, "%s", lines[i + offset]);
+        }
+
+        wrefresh(win);
+
+        int ch = wgetch(win);
+        switch (ch) {
+            case KEY_UP:
+                if (offset > 0) offset--;
+                break;
+            case KEY_DOWN:
+                if (offset < line_count - max_lines) offset++;
+                break;
+            case KEY_PPAGE:
+                offset = (offset > max_lines) ? offset - max_lines : 0;
+                break;
+            case KEY_NPAGE:
+                offset += max_lines;
+                if (offset > line_count - max_lines) {
+                    offset = line_count - max_lines;
+                }
+                break;
+            case 27:  
+            case 'q':
+            case KEY_LEFT:
+                for (int i = 0; i < line_count; i++) {
+                    free(lines[i]);
+                }
+                free(buffer);
+                delwin(win);
+                touchwin(stdscr);
+                refresh();
+                return;
+        }
+    }
+}
+
+void abmenu() {
+    int menu_selected = 0;
+    const char *menu_items[] = {"LICENSE", "COMMANDS", "ABOUT"};
+    int menu_count = sizeof(menu_items) / sizeof(menu_items[0]);
+
+    int win_height = 15;
+    int win_width = 35;
+    int start_y = (LINES - win_height) / 2;
+    int start_x = (COLS - win_width) / 2;
+
+    WINDOW *win = newwin(win_height, win_width, start_y, start_x);
+    keypad(win, TRUE);
+    wattron(win, COLOR_PAIR(1)); 
+    box(win, 0, 0);
+    wattroff(win, COLOR_PAIR(1));
+
+    while (1) {
+        werase(win);
+        wattron(win, COLOR_PAIR(1));
+        box(win, 0, 0);
+        wattroff(win, COLOR_PAIR(1));
+        mvwprintw(win, 1, 1, "IFM");
+        mvwprintw(win, 2, 1, "Lightweight file text manager.");
+        mvwprintw(win, 3, 1, "Launch commands");
+        mvwprintw(win, 4, 1, "ifm -? - To open this menu"); 
+        mvwprintw(win, 5, 1, "ifm -h - To open help text");
+        mvwprintw(win, 6, 1, "ifm PATH - To open 'PATH' dir");
+
+        for (int i = 0; i < menu_count; i++) {
+            if (i == menu_selected) {
+                wattron(win, A_REVERSE);
+            }
+            mvwprintw(win, i + 9, 1, "%s", menu_items[i]);
+            if (i == menu_selected) {
+                wattroff(win, A_REVERSE);
+            }
+        }
+
+        wrefresh(win);
+
+        int ch = wgetch(win);
+        switch (ch) {
+            case KEY_UP:
+                if (menu_selected > 0) menu_selected--;
+                break;
+            case KEY_DOWN:
+                if (menu_selected < menu_count - 1) menu_selected++;
+                break;
+            case '\n':
+            case KEY_RIGHT:
+                if (strcmp(menu_items[menu_selected], "LICENSE") == 0) {
+                    fcontent("/usr/share/ifm/LICENSE");
+                } else if (strcmp(menu_items[menu_selected], "COMMANDS") == 0) {
+                    fcontent("/usr/share/ifm/COMMANDS");
+                } else if (strcmp(menu_items[menu_selected], "ABOUT") == 0) {
+                    fcontent("/usr/share/ifm/ABOUT");
+                }
+                touchwin(stdscr);  
+                refresh();
+                break;
+            case KEY_F(2):  
+            case 27:
+            case 'q':
+                delwin(win);
+                touchwin(stdscr); 
+                refresh();
+                return;
+            case KEY_LEFT:  
+                delwin(win);
+                touchwin(stdscr); 
+                refresh();
+                return;
+        }
+    }
+}
 
 int conf_del(const char *filename) {
     curs_set(1);
@@ -849,204 +1041,15 @@ void Command() {
         to_home();
     } else if (strcmp(command_str, "rename") == 0) {
         ren(files[selected]);
+    } else if (strcmp(command_str, "help") == 0) {
+        abmenu();
     } else {
         mvprintw(LINES - 1, 0, "Unknown command.");
     }
 }
 
-void fcontent(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        mvprintw(LINES - 1, 0, "Ошибка: файл %s не найден.", filename);
-        refresh();
-        getch();
-        return;
-    }
 
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
 
-    char *buffer = malloc(file_size + 1);
-    if (!buffer) {
-        fclose(file);
-        mvprintw(LINES - 1, 0, "Ошибка: не удалось выделить память.");
-        refresh();
-        getch();
-        return;
-    }
-
-    fread(buffer, 1, file_size, file);
-    buffer[file_size] = '\0';
-    fclose(file);
-
-    int win_height = LINES / 2;
-    int win_width = COLS / 2;
-    int start_y = (LINES - win_height) / 2;
-    int start_x = (COLS - win_width) / 2;
-
-    WINDOW *win = newwin(win_height, win_width, start_y, start_x);
-    keypad(win, TRUE);
-    wattron(win, COLOR_PAIR(1));
-    box(win, 0, 0);
-    wattroff(win, COLOR_PAIR(1));
-
-    int max_lines = win_height - 2;
-    int max_cols = win_width - 2;  
-
-    char *lines[1024];
-    int line_count = 0;
-    char *line = strtok(buffer, "\n");
-    while (line != NULL && line_count < 1023) {
-        int line_length = strlen(line);
-        int start_pos = 0;
-
-        while (start_pos < line_length) {
-            int chunk_length = max_cols;
-            if (start_pos + chunk_length > line_length) {
-                chunk_length = line_length - start_pos;
-            }
-
-            lines[line_count] = malloc(chunk_length + 1);
-            if (!lines[line_count]) {
-                for (int i = 0; i < line_count; i++) {
-                    free(lines[i]);
-                }
-                free(buffer);
-                fclose(file);
-                return;
-            }
-
-            strncpy(lines[line_count], line + start_pos, chunk_length);
-            lines[line_count][chunk_length] = '\0';
-            start_pos += chunk_length;
-            line_count++;
-        }
-
-        line = strtok(NULL, "\n");
-    }
-
-    int offset = 0;
-
-    while (1) {
-        werase(win);
-        wattron(win, COLOR_PAIR(1));
-        box(win, 0, 0);
-        wattroff(win, COLOR_PAIR(1));
-
-        for (int i = 0; i < max_lines && i + offset < line_count; i++) {
-            mvwprintw(win, i + 1, 1, "%s", lines[i + offset]);
-        }
-
-        wrefresh(win);
-
-        int ch = wgetch(win);
-        switch (ch) {
-            case KEY_UP:
-                if (offset > 0) offset--;
-                break;
-            case KEY_DOWN:
-                if (offset < line_count - max_lines) offset++;
-                break;
-            case KEY_PPAGE:
-                offset = (offset > max_lines) ? offset - max_lines : 0;
-                break;
-            case KEY_NPAGE:
-                offset += max_lines;
-                if (offset > line_count - max_lines) {
-                    offset = line_count - max_lines;
-                }
-                break;
-            case 27:  
-            case 'q':
-            case KEY_LEFT:
-                for (int i = 0; i < line_count; i++) {
-                    free(lines[i]);
-                }
-                free(buffer);
-                delwin(win);
-                touchwin(stdscr);
-                refresh();
-                return;
-        }
-    }
-}
-
-void abmenu() {
-    int menu_selected = 0;
-    const char *menu_items[] = {"LICENSE", "COMMANDS", "ABOUT"};
-    int menu_count = sizeof(menu_items) / sizeof(menu_items[0]);
-
-    int win_height = 15;
-    int win_width = 35;
-    int start_y = (LINES - win_height) / 2;
-    int start_x = (COLS - win_width) / 2;
-
-    WINDOW *win = newwin(win_height, win_width, start_y, start_x);
-    keypad(win, TRUE);
-    wattron(win, COLOR_PAIR(1)); 
-    box(win, 0, 0);
-    wattroff(win, COLOR_PAIR(1));
-
-    while (1) {
-        werase(win);
-        wattron(win, COLOR_PAIR(1));
-        box(win, 0, 0);
-        wattroff(win, COLOR_PAIR(1));
-        mvwprintw(win, 1, 1, "IFM");
-        mvwprintw(win, 2, 1, "Lightweight file text manager.");
-        mvwprintw(win, 3, 1, "Launch commands");
-        mvwprintw(win, 4, 1, "ifm -? - To open this menu"); 
-        mvwprintw(win, 5, 1, "ifm -h - To open help text");
-        mvwprintw(win, 6, 1, "ifm PATH - To open 'PATH' dir");
-
-        for (int i = 0; i < menu_count; i++) {
-            if (i == menu_selected) {
-                wattron(win, A_REVERSE);
-            }
-            mvwprintw(win, i + 9, 1, "%s", menu_items[i]);
-            if (i == menu_selected) {
-                wattroff(win, A_REVERSE);
-            }
-        }
-
-        wrefresh(win);
-
-        int ch = wgetch(win);
-        switch (ch) {
-            case KEY_UP:
-                if (menu_selected > 0) menu_selected--;
-                break;
-            case KEY_DOWN:
-                if (menu_selected < menu_count - 1) menu_selected++;
-                break;
-            case '\n':
-            case KEY_RIGHT:
-                if (strcmp(menu_items[menu_selected], "LICENSE") == 0) {
-                    fcontent("/usr/share/ifm/LICENSE");
-                } else if (strcmp(menu_items[menu_selected], "COMMANDS") == 0) {
-                    fcontent("/usr/share/ifm/COMMANDS");
-                } else if (strcmp(menu_items[menu_selected], "ABOUT") == 0) {
-                    fcontent("/usr/share/ifm/ABOUT");
-                }
-                touchwin(stdscr);  
-                refresh();
-                break;
-            case KEY_F(2):  
-            case 27:
-            case 'q':
-                delwin(win);
-                touchwin(stdscr); 
-                refresh();
-                return;
-            case KEY_LEFT:  
-                delwin(win);
-                touchwin(stdscr); 
-                refresh();
-                return;
-        }
-    }
-}
 
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "ru_RU.UTF-8");
@@ -1224,4 +1227,3 @@ int main(int argc, char *argv[]) {
     endwin();
     return 0;
 }
-
