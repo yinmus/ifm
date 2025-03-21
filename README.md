@@ -4,7 +4,9 @@
 
 ____
 
-### Installation:
+### Manual assembly:
+
+(Clone repo)
 
 The `make install ins=0` command compiles the `ifm` binary and installs it by copying necessary files: documentation (`ABOUT`, `COMMANDS`, `LICENSE`) to `/usr/share/ifm`, the icon (`ifm.png`) to `/usr/share/icons/hicolor/128x128/apps/`, and the desktop entry (`ifm.desktop`) to `/usr/share/applications/`. It also updates the desktop database to ensure proper system integration.
 
