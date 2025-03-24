@@ -4,6 +4,32 @@
 
 ____
 
+### Installation:
+
+Download the latest [release](https://github.com/yinmus/ifm/releases/)
+Execute the commands according to the release instructions
+
+For example:
+
+___
+
+**--extract**
+
+`tar -xzvf ifm-linux-x86_64.tar.gz`
+
+(Go to directory `ifm`)
+
+**-- install**
+
+`./install.sh`
+
+**-- run**
+
+`ifm / ifm -? / ifm -h / ifm path`
+
+___
+
+
 ### Manual assembly:
 
 (Clone repo)
