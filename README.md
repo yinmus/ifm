@@ -13,19 +13,23 @@ For example:
 
 ___
 
-**--extract**
 
-`tar -xzvf ifm-linux-x86_64.tar.gz`
+
+```
+tar -xzvf ifm-linux-x86_64.tar.gz # --extract
+```
 
 (Go to directory `ifm`)
 
-**-- install**
 
-`./install.sh`
+```
+./install.sh # -- install
+```
 
-**-- run**
 
-`ifm / ifm -? / ifm -h / ifm path`
+```
+ifm / ifm -? / ifm -h / ifm path # -- run
+```
 
 ___
 
