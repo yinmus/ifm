@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -O2
-LDFLAGS = -lncursesw -ltinfo -D_GNU_SOURCE
+LDFLAGS = -lncursesw -ltinfo -lmagic -D_GNU_SOURCE
 SRC = src/ifm.c
 BIN = ifm
 PREFIX = /usr/bin
