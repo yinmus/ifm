@@ -1,4 +1,4 @@
-/*
+*
     ifm.c
     MIT License
 
@@ -987,7 +987,7 @@ void reference() {
 
 void show_version() {
     printf("ifm %s\n\n", IFM_VERSION);
-    printf("Copyright (c) 2025\n");
+    printf("Copyright (c) 2025 YINMUS-IFM\n");
     printf("Released under the MIT License.\n\n");
     printf("Author: Yinmus <https://github.com/yinmus/>\n");
     printf("Please report bugs: <https://github.com/yinmus/ifm/issues>\n");
@@ -1319,4 +1319,3 @@ int main(int argc, char *argv[]) {
     endwin();
     return 0;
 }
-
