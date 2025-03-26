@@ -5,7 +5,8 @@ audio=vlc
 image=eog
 other=nano
 
-Config setup mega easy :
+Config setup mega easy:
+(Open config file $HOME/.config/ifm/config)
 
 format=viewer
 
