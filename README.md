@@ -3,6 +3,14 @@
 <img src="logo-ifm.png" alt="scr" width="750">
 
 ____
+### Setting up the config:
+
+Config location: **$HOME/.config/ifm/config**
+
+When you start ifm, the config is automatically generated
+
+About [setup](CFG-GUIDE)  
+
 
 ### Installation:
 
