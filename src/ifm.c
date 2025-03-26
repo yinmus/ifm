@@ -51,7 +51,7 @@
 #define MAX_FILES 16384
 #define MAX_PATH 16384
 #define MAX_NAME 256
-
+#define IFM_VERSION "0.0.4"
 
 
 
@@ -970,19 +970,28 @@ int confrim_delete(const char *filename) {
 
 
 void reference() {
-    printf("IFM - Lightweight Ncurses File Manager\n\n");
+    printf("IFM - Lightweight Ncurses File Manager\n");
+    printf("Version: %s\n\n", IFM_VERSION);
     printf("Usage: ifm [OPTION] [PATH]\n\n");
     printf("Options:\n");
     printf("  -h, -?    Show this help message\n");
+    printf("  -V        Show version information\n");
     printf("  PATH      Open the specified directory (default: current directory)\n\n");
     printf("Examples:\n");
     printf("  ifm                     Open current directory\n");
     printf("  ifm Documents           Open 'Documents' directory\n");
     printf("  ifm -h                  Show this help message\n");
     printf("  ifm -?                  Open the menu\n");
+    printf("  ifm -V                  Show version information\n");
 }
 
-
+void show_version() {
+    printf("ifm %s\n\n", IFM_VERSION);
+    printf("Copyright (c) 2025\n");
+    printf("Released under the MIT License.\n\n");
+    printf("Author: Yinmus <https://github.com/yinmus/>\n");
+    printf("Please report bugs: <https://github.com/yinmus/ifm/issues>\n");
+}
 
 void get_inf(const char *filename, char *info, size_t info_size) {
     char full_path[MAX_PATH];
@@ -1044,6 +1053,10 @@ int main(int argc, char *argv[]) {
 
             endwin();  
             return 0;
+        } else if (strcmp(argv[1], "-V") == 0) {
+            show_version();
+            return 0;   
+            
         } else {
             hs_path(argv[1], path);
         }
