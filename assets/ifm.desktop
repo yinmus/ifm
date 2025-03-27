@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=IFM
+GenericName=File Manager
+Comment=Lightweight terminal-based file manager
+Exec=sh -c 'exec /usr/bin/ifm %U'
+Icon=/usr/share/icons/hicolor/128x128/apps/ifm.png
+Terminal=true
+Type=Application
+Categories=System;FileManager;
+MimeType=inode/directory;
