@@ -20,7 +20,7 @@ clean:
 
 install:
 	@if [ "$(ins)" = "0" ] || [ "$(ins)" = "1" ]; then \
-		$(MAKE) install_base; \
+		$(MAKE) install_bas; \
 		if [ "$(ins)" = "1" ]; then \
 			echo "Removing source directory ifm"; \
 			cd .. && rm -rf ifm; \
@@ -29,7 +29,7 @@ install:
 		echo "Usage: make install ins=0 or make install ins=1"; \
 	fi
 
-install_base:
+install_bas:
 	@echo "Compiling and installing $(BIN)"
 	$(MAKE) all
 
