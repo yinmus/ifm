@@ -16,7 +16,7 @@ License : GPLv3
 #include <stdlib.h>
 #include <stdio.h>
 
-#define IFM_VERSION "0.0.4"
+#define IFM_VERSION "0.0.5"
 
 
 
