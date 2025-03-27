@@ -68,7 +68,6 @@ uninstall:
 	@echo "Removing documentation files from $(DOC_DIR)"
 	sudo rm $(DOC_DIR)/*
 
-
 	@echo "Updating desktop and icon caches"
 	sudo update-desktop-database /usr/share/applications/
 	sudo gtk-update-icon-cache /usr/share/icons/hicolor/
