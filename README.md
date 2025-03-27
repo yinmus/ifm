@@ -1,6 +1,6 @@
 # IFM - light, easy text file manager
 
-<img src="logo-ifm.png" alt="scr" width="750">
+<img src="ifm-logo.png" alt="scr" width="750">
 
 ____
 ### Setting up the config:
