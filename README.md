@@ -59,5 +59,4 @@ ___
 
 
 
-###### p.s.  Автодополнения команды :cd работает не очень хорошо
-###### [LICENSE](LICENSE) : [MIT](https://en.wikipedia.org/wiki/MIT_License)
+###### [LICENSE](LICENSE) : [GPLv3](https://www.gnu.org/licenses/gpl-3.0.ru.html)
