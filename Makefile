@@ -66,9 +66,7 @@ uninstall:
 	sudo rm -f $(ICON_DEST)
 
 	@echo "Removing documentation files from $(DOC_DIR)"
-	for file in $(DOC_FILES); do \
-		sudo rm -f $(DOC_DIR)/$$file; \
-	done
+	sudo rm $(DOC_DIR)/*
 
 	@echo "Removing documentation directory if empty"
 	sudo rmdir --ignore-fail-on-non-empty $(DOC_DIR)
