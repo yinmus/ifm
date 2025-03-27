@@ -1,29 +1,12 @@
 /*
-    ifm.c
-    MIT License
+======================================
+    IFM by yinmus (c) 2025-2025
+======================================
 
-    Copyright (c) 2025 IFM-YINMUS
+Relative path : ifm/src/ifm.c
+Github url : https://github.com/yinmus/ifm.git
+License : GPLv3 
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-    _____________________________________________________________________________
-    BY YINMUS
-    <https://github.com/yinmus/ifm>
 */
 
 #include <magic.h>
@@ -45,13 +28,10 @@
 #include <errno.h>
 
 
+#include "fmh.h"
 #include "icons.h"
+#include "ifm.h"
 
-
-#define MAX_FILES 16384
-#define MAX_PATH 16384
-#define MAX_NAME 256
-#define IFM_VERSION "0.0.4"
 
 
 
@@ -60,8 +40,6 @@ int file_count = 0, selected = 0, offset = 0;
 char path[MAX_PATH];
 char lpath[MAX_PATH];
 int s_hidden = 0;
-
-
 
 
 typedef struct {
@@ -78,54 +56,21 @@ typedef struct {
     char default_viewer[MAX_NAME];
 } Config;
 
-
-
 static int last_clicked = -1;
 static time_t last_click_time = 0;
 
-
 extern char **environ;
 
-int dist_s(const char *str) {
-    wchar_t wstr[MAX_NAME];
-    mbstowcs(wstr, str, MAX_NAME);
-    return wcswidth(wstr, MAX_NAME);
-}
-
-void cls() {
-    clear();
-    refresh();
-}
-
-int dirt(const char *path) {
-    struct stat statbuf;
-    return (stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
-}
 
 int cpe(char *buffer, int max_len, const char *prompt);
+void goto_cmd(int next_char);
+int dirt(const char *path);
+int dist_s(const char *str);
+void cls();
+void hs_path(const char *relative_path, char *absolute_path);
+int compare(const void *a, const void *b);
+void hs_path(const char *relative_path, char *absolute_path);
 
-void hs_path(const char *relative_path, char *absolute_path) {
-    if (relative_path[0] == '/') {
-        strncpy(absolute_path, relative_path, PATH_MAX);
-    } else {
-        char cwd[PATH_MAX];
-        if (getcwd(cwd, sizeof(cwd)) != NULL) {
-            snprintf(absolute_path, PATH_MAX, "%s/%s", cwd, relative_path);
-        } else {
-            perror("getcwd");
-            strncpy(absolute_path, relative_path, PATH_MAX);
-        }
-    }
-}
-
-
-
-
-
-
-int compare(const void *a, const void *b) {
-    return strcasecmp((const char *)a, (const char *)b);
-}
 
 
 void create_default_config() {
@@ -155,6 +100,7 @@ void create_default_config() {
         }
     }
 }
+
 
 void load_config(Config *config) {
     strcpy(config->video_viewer, "vlc");
@@ -232,7 +178,7 @@ void list(const char *path) {
     qsort(files, file_count, MAX_PATH, compare);
 }
 
-void rmfd(const char *path) {
+void rm(const char *path) {
     struct stat st;
     if (stat(path, &st) != 0) {
         perror("stat");
@@ -253,7 +199,7 @@ void rmfd(const char *path) {
             char full_path[MAX_PATH];
             snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
 
-            rmfd(full_path); 
+            rm(full_path); 
         }
         closedir(dir);
 
@@ -360,10 +306,18 @@ fallback:
 
 void cr_file() {
     char filename[MAX_NAME];
-    if (cpe(filename, MAX_NAME, "Filename:")) {
+    if (cpe(filename, MAX_NAME, "Filename")) {
         if (strlen(filename) > 0) {
             char full_path[MAX_PATH];
             snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
+            
+            struct stat st;
+            if (stat(full_path, &st) == 0) {
+                mvprintw(LINES - 1, 0, "Error: File or directory already exists");
+                getch();
+                return;
+            }
+            
             FILE *file = fopen(full_path, "w");
             if (file) fclose(file);
 
@@ -379,14 +333,22 @@ void cr_file() {
     }
 }
 
+
 void crt_dir() {
     char dirname[MAX_NAME];
     if (cpe(dirname, MAX_NAME, "Dir name")) {
         if (strlen(dirname) > 0) {
             char full_path[MAX_PATH];
             snprintf(full_path, sizeof(full_path), "%s/%s", path, dirname);
+            
+            struct stat st;
+            if (stat(full_path, &st) == 0) {
+                mvprintw(LINES - 1, 0, "Error: File or directory already exists");
+                getch();
+                return;
+            }
+            
             mkdir(full_path, 0777);
-
             list(path);
 
             for (int i = 0; i < file_count; i++) {
@@ -528,26 +490,28 @@ void to_home() {
     }
 }
 
+
 void UI() {
     clear();
+    setlocale(LC_ALL, "");
 
-    init_pair(3, COLOR_CYAN, COLOR_BLACK); 
-    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(1, COLOR_CYAN, COLOR_BLACK);   
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);  
+    init_pair(3, COLOR_CYAN, COLOR_BLACK);   
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK); 
     init_pair(5, COLOR_WHITE, COLOR_BLACK);  
-    init_pair(6, COLOR_RED, COLOR_BLACK); 
+    init_pair(6, COLOR_RED, COLOR_BLACK);    
+    init_pair(7, COLOR_BLACK, COLOR_WHITE);
 
     attron(COLOR_PAIR(4) | A_BOLD);
-    mvprintw(0, 0, "[ IFileManager ] - ");
+    mvprintw(0, 0, "[ IFM ] - ");
     wchar_t wpath[MAX_PATH];
     mbstowcs(wpath, path, MAX_PATH);
     waddwstr(stdscr, wpath);
     attroff(COLOR_PAIR(4) | A_BOLD);
-
-    attron(COLOR_PAIR(4) | A_BOLD);
     mvprintw(0, COLS - 15, "Files: %d", file_count);
-    attroff(COLOR_PAIR(4) | A_BOLD);
 
-    int height = LINES - 3; 
+    int height = LINES - 4; 
     if (selected < offset) {
         offset = selected;
     } else if (selected >= offset + height) {
@@ -560,125 +524,105 @@ void UI() {
 
         int is_marked = 0;
         for (int j = 0; j < MAX_FILES; j++) {
-            if (strcmp(marked_files[j].path, full_path) == 0 && marked_files[j].marked) {
+            if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
                 is_marked = 1;
+
                 break;
             }
         }
 
+        char truncated_name[MAX_DISPLAY_NAME + 1];
+        if (strlen(files[i + offset]) > MAX_DISPLAY_NAME) {
+            snprintf(truncated_name, sizeof(truncated_name), "%.*s...", MAX_DISPLAY_NAME - 3, files[i + offset]);
+        } else {
+            strncpy(truncated_name, files[i + offset], MAX_DISPLAY_NAME);
+            truncated_name[MAX_DISPLAY_NAME] = '\0';
+        }
+
         struct stat st;
-        const char *icon = ""; 
+        const char *icon = "";
+        int color_pair = 5; 
 
         if (stat(full_path, &st) == 0) {
             if (S_ISDIR(st.st_mode)) {
-                icon = ""; 
-                attron(COLOR_PAIR(1));
+                icon = "";
+                color_pair = 1;
             } else if (S_ISREG(st.st_mode)) {
-                attron(COLOR_PAIR(2));
+                color_pair = 2;
                 const char *ext = strrchr(files[i + offset], '.');
-                if (ext) {
-                    ext++;
-                    icon = icon_ext(ext); 
-                }
+                if (ext) icon = icon_ext(ext + 1);
             }
         }
-
-        char size_str[20];
-        char date_str[20];
-        if (stat(full_path, &st) == 0) {
-            double size = (double)st.st_size;
-            const char *unit = "B";
-            if (size > 1024) {
-                size /= 1024;
-                unit = "KB";
-            }
-            if (size > 1024) {
-                size /= 1024;
-                unit = "MB";
-            }
-            if (size > 1024) {
-                size /= 1024;
-                unit = "GB";
-            }
-            snprintf(size_str, sizeof(size_str), "%.2f %s", size, unit);
-
-            strftime(date_str, sizeof(date_str), "%Y-%m-%d %H:%M", localtime(&st.st_mtime));
-        } else {
-            snprintf(size_str, sizeof(size_str), "Unknown");
-            snprintf(date_str, sizeof(date_str), "Unknown");
-        }
-
-        int name_width = dist_s(files[i + offset]);
-
-        char line[MAX_PATH];
-        snprintf(line, sizeof(line), "%s%s %-*s %10s %20s", 
-                is_marked ? "*" : " ",
-                icon, 
-                30 - (name_width - strlen(files[i + offset])), 
-                files[i + offset], 
-                size_str, 
-                date_str);
 
         if (i + offset == selected) attron(A_REVERSE);
-        if (is_marked) attron(COLOR_PAIR(6)); 
-        mvprintw(i + 2, 2, "%s", line);
-        if (is_marked) attroff(COLOR_PAIR(6));
+        
+        if (is_marked) {
+            attron(COLOR_PAIR(6));
+            mvaddch(i + 2, 2, '*');
+            attroff(COLOR_PAIR(6));
+        } else {
+            mvaddch(i + 2, 2, ' ');
+        }
+        
+        if (color_pair) attron(COLOR_PAIR(color_pair));
+        mvprintw(i + 2, 3, "%s %-*s", icon, MAX_DISPLAY_NAME, files[i + offset]);
+        if (color_pair) attroff(COLOR_PAIR(color_pair));
+        
         if (i + offset == selected) attroff(A_REVERSE);
+    }
 
-        attroff(COLOR_PAIR(1));
-        attroff(COLOR_PAIR(2));
+    if (file_count > 0 && selected >= 0 && selected < file_count) {
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
+        
+        struct stat st;
+        if (stat(full_path, &st) == 0) {
+            double size = st.st_size;
+            const char *unit = "B";
+            if (size > 1024) { size /= 1024; unit = "KB"; }
+            if (size > 1024) { size /= 1024; unit = "MB"; }
+            if (size > 1024) { size /= 1024; unit = "GB"; }
+            
+            char date_str[20];
+            strftime(date_str, sizeof(date_str), "%Y-%m-%d %H:%M", localtime(&st.st_mtime));
+            
+            char perms[10];
+            snprintf(perms, sizeof(perms), "%c%c%c%c%c%c%c%c%c",
+                (S_ISDIR(st.st_mode)) ? 'd' : '-',
+                (st.st_mode & S_IRUSR) ? 'r' : '-',
+                (st.st_mode & S_IWUSR) ? 'w' : '-',
+                (st.st_mode & S_IXUSR) ? 'x' : '-',
+                (st.st_mode & S_IRGRP) ? 'r' : '-',
+                (st.st_mode & S_IWGRP) ? 'w' : '-',
+                (st.st_mode & S_IXGRP) ? 'x' : '-',
+                (st.st_mode & S_IROTH) ? 'r' : '-',
+                (st.st_mode & S_IWOTH) ? 'w' : '-',
+                (st.st_mode & S_IXOTH) ? 'x' : '-');
+            
+            const char *file_type = S_ISDIR(st.st_mode) ? "Directory" : 
+                                  S_ISREG(st.st_mode) ? "File" : "Special";
+            
+            attron(COLOR_PAIR(3) | A_BOLD); 
+            mvprintw(LINES - 2, 0, "%.2f %s | %s | %s ", 
+                 size, unit, date_str, perms);
+            int current_len = strlen(files[selected]) + strlen(file_type) + strlen(date_str) + 
+                            strlen(perms) + 60;
+            for (int i = current_len; i < COLS; i++) {
+                addch(' ');
+            }
+            attroff(COLOR_PAIR(3) | A_BOLD);
+        }
+    } else {
+        attron(COLOR_PAIR(3));
+        for (int i = 0; i < COLS; i++) {
+            mvaddch(LINES - 2, i, ' ');
+        }
+        attroff(COLOR_PAIR(3));
     }
 
     refresh();
 }
 
-void help_view() {
-    def_prog_mode();
-    endwin();
-
-    FILE *pager = popen("less", "w"); 
-
-    if (pager == NULL) {
-        perror("popen");
-        return;
-    }
-
-    fprintf(pager, "IFM - Lightweight Ncurses File Manager\n");
-    fprintf(pager, "======================================\n");
-    fprintf(pager, "Controls:\n");
-    fprintf(pager, "  [K/J]         Move up/down\n");
-    fprintf(pager, "  [Shift+J]     Move down a portion of files\n");
-    fprintf(pager, "  [Shift+K]     Move up a portion of files\n");
-    fprintf(pager, "  [Enter/L]     Open file/dir\n");
-    fprintf(pager, "  [H]           Go back\n");
-    fprintf(pager, "  [CTRL + H]    Toggle hidden files\n");
-    fprintf(pager, "  [Alt + H]     Go home\n");
-    fprintf(pager, "  [T]           Create file\n");
-    fprintf(pager, "  [M]           Create dir\n");
-    fprintf(pager, "  [DEL]         Delete file/dir\n");
-    fprintf(pager, "  [R]           Rename file/dir\n");
-    fprintf(pager, "  [C]           Mark/unmark file/dir\n");
-    fprintf(pager, "  [Shift+R]     Rename marked files/dirs \n");
-    fprintf(pager, "  [O]     Open with custom viewer\n");
-    fprintf(pager, "  [Q]           Exit\n");
-    fprintf(pager, "  [F1]          Help\n");
-    fprintf(pager, "  [I]           Open ABOUT, LICENSE, and COMMANDS help.\n");
-    fprintf(pager, "  [gg]          Go to the first file\n");
-    fprintf(pager, "  [G]           Go to the last file\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "Mouse Controls:\n");
-    fprintf(pager, "  [Left Click]  Select/Open file/dir\n");
-    fprintf(pager, "  [Right Click] Go back\n");
-    fprintf(pager, "  [Scroll Up]   Move up\n");
-    fprintf(pager, "  [Scroll Down] Move down\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "\n");
-
-    pclose(pager); 
-
-    reset_prog_mode();
-    refresh();
-}
 
 void fcontent(const char *filename) {
     FILE *file = fopen(filename, "r");
@@ -799,13 +743,13 @@ void fcontent(const char *filename) {
 }
 
 
-void abmenu() {
+void doc_menu() {
     int menu_selected = 0;
-    const char *menu_items[] = {"LICENSE", "COMMANDS", "ABOUT"};
+    const char *menu_items[] = {"LICENSE", "COMMANDS", "ABOUT", "CONFIG"};
     int menu_count = sizeof(menu_items) / sizeof(menu_items[0]);
 
-    int win_height = 15;
-    int win_width = 35;
+    int win_height = 20;
+    int win_width = 80;
     int start_y = (LINES - win_height) / 2;
     int start_x = (COLS - win_width) / 2;
 
@@ -850,11 +794,13 @@ void abmenu() {
             case '\n':
             case KEY_RIGHT:
                 if (strcmp(menu_items[menu_selected], "LICENSE") == 0) {
-                    fcontent("/usr/share/ifm/LICENSE");
+                    fcontent("/usr/share/doc/ifm/LICENSE");
                 } else if (strcmp(menu_items[menu_selected], "COMMANDS") == 0) {
-                    fcontent("/usr/share/ifm/COMMANDS");
+                    fcontent("/usr/share/doc/ifm/COMMANDS.txt");
                 } else if (strcmp(menu_items[menu_selected], "ABOUT") == 0) {
-                    fcontent("/usr/share/ifm/ABOUT");
+                    fcontent("/usr/share/doc/ifm/ABOUT.txt");
+                } else if (strcmp(menu_items[menu_selected], "CONFIG") == 0) {
+                    fcontent("/usr/share/doc/ifm/CFG-GUIDE.txt");
                 }
                 touchwin(stdscr);  
                 refresh();
@@ -874,6 +820,7 @@ void abmenu() {
         }
     }
 }
+
 
 int cpe(char *buffer, int max_len, const char *prompt) {
     echo();  
@@ -969,31 +916,8 @@ int confrim_delete(const char *filename) {
 }
 
 
-void reference() {
-    printf("IFM - Lightweight Ncurses File Manager\n");
-    printf("Version: %s\n\n", IFM_VERSION);
-    printf("Usage: ifm [OPTION] [PATH]\n\n");
-    printf("Options:\n");
-    printf("  -h, -?    Show this help message\n");
-    printf("  -V        Show version information\n");
-    printf("  PATH      Open the specified directory (default: current directory)\n\n");
-    printf("Examples:\n");
-    printf("  ifm                     Open current directory\n");
-    printf("  ifm Documents           Open 'Documents' directory\n");
-    printf("  ifm -h                  Show this help message\n");
-    printf("  ifm -?                  Open the menu\n");
-    printf("  ifm -V                  Show version information\n");
-}
 
-void show_version() {
-    printf("ifm %s\n\n", IFM_VERSION);
-    printf("Copyright (c) 2025 YINMUS-IFM\n");
-    printf("Released under the MIT License.\n\n");
-    printf("Author: Yinmus <https://github.com/yinmus/>\n");
-    printf("Please report bugs: <https://github.com/yinmus/ifm/issues>\n");
-}
-
-void get_inf(const char *filename, char *info, size_t info_size) {
+void get_info(const char *filename, char *info, size_t info_size) {
     char full_path[MAX_PATH];
     snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
 
@@ -1026,9 +950,115 @@ void get_inf(const char *filename, char *info, size_t info_size) {
 
 
 
+void goto_cmd(int next_char) {
+    char target_path[MAX_PATH];
+    
+    switch(next_char) {
+        case '/':
+            strcpy(target_path, "/");
+            break;
+        case 'e':
+            strcpy(target_path, "/etc/");
+            break;
+        case 'm': {
+            if (access("/media", F_OK) == 0) {
+                strcpy(target_path, "/media/");
+            } else if (access("/run/media", F_OK) == 0) {
+                strcpy(target_path, "/run/media/");
+            } else {
+                strcpy(target_path, "/");
+            }
+            break;
+        }
+        case 'd':
+            strcpy(target_path, "/dev/");
+            break;
+        case 'M':
+            strcpy(target_path, "/mnt/");
+            break;
+        case 't':
+            strcpy(target_path, "/tmp/");
+            break;
+        case 'v':
+            strcpy(target_path, "/var/");
+            break;
+        case 's':
+            strcpy(target_path, "/srv/");
+            break;
+        case '?':
+            strcpy(target_path, "/usr/share/doc/ifm/");
+            break;
+        case 'o':
+            strcpy(target_path, "/opt/");
+            break;
+	case 'g':
+	    selected = 0;
+	    offset = 0;
+	    return;
+        case 'u':
+            strcpy(target_path, "/usr/");
+            break;    
+        case 'h':
+            to_home();
+            return;
+        default:
+            return; 
+    }
+    
+    if (chdir(target_path) == 0) {
+        getcwd(path, sizeof(path));
+        list(path);
+        selected = 0;
+        offset = 0;
+    }
+}
 
 
+int dist_s(const char *str) {
+    setlocale(LC_ALL, "");
+    int width = 0;
+    wchar_t wc;
+    const char *ptr = str;
+    size_t len = strlen(str);
+    
+    while (*ptr != '\0' && len > 0) {
+        int consumed = mbtowc(&wc, ptr, len);
+        if (consumed <= 0) break;
+        width += wcwidth(wc);
+        ptr += consumed;
+        len -= consumed;
+    }
+    return width;
+}
 
+void cls() {
+    clear();
+    refresh();
+}
+
+int dirt(const char *path) {
+    struct stat statbuf;
+    return (stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
+}
+
+int compare(const void *a, const void *b) {
+    return strcasecmp((const char *)a, (const char *)b);
+}
+
+
+void hs_path(const char *relative_path, char *absolute_path) {
+    if (relative_path[0] == '/') {
+        strncpy(absolute_path, relative_path, PATH_MAX);
+    } else {
+        char cwd[PATH_MAX];
+        if (getcwd(cwd, sizeof(cwd)) != NULL) {
+            snprintf(absolute_path, PATH_MAX, "%s/%s", cwd, relative_path);
+        } else {
+            perror("getcwd");
+            strncpy(absolute_path, relative_path, PATH_MAX);
+        }
+    }
+}
 
 int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "ru_RU.UTF-8");
@@ -1049,16 +1079,19 @@ int main(int argc, char *argv[]) {
             init_pair(1, COLOR_CYAN, COLOR_BLACK);
             init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
-            abmenu();  
+            doc_menu();  
 
             endwin();  
             return 0;
         } else if (strcmp(argv[1], "-V") == 0) {
-            show_version();
-            return 0;   
-            
+            Version();
+            return 0;
         } else {
             hs_path(argv[1], path);
+            struct stat st;
+            if (stat(path, &st) != 0 || !S_ISDIR(st.st_mode)) {
+                getcwd(path, sizeof(path));
+            }
         }
     } else {
         getcwd(path, sizeof(path));
@@ -1090,7 +1123,7 @@ int main(int argc, char *argv[]) {
                     if (y >= 0 && y < file_count) {
                         int clicked_item = y + offset;
                         
-                        if (clicked_item == last_clicked && (time(NULL) - last_click_time) * 1000 < 500) {
+                        if (clicked_item == last_clicked && (time(NULL) - last_click_time) * 1000 < 2000) {
                             char full_path[MAX_PATH];
                             snprintf(full_path, sizeof(full_path), "%s/%s", path, files[clicked_item]);
                             
@@ -1119,12 +1152,6 @@ int main(int argc, char *argv[]) {
                     if (selected < file_count - 1) selected++;
                 }
             }
-        } else if (ch == 27) {
-            ch = getch();
-                if (ch == 'h') {
-                    to_home();
-                }
-
         } else {
             switch (ch) {
                 case 'q':
@@ -1143,7 +1170,7 @@ int main(int argc, char *argv[]) {
             
                 case 'K':
                     if (selected > 0) {
-                        selected -= (file_count > 100) ? file_count / 5 : file_count / 1.5;
+                        selected -= 10;
                     }
                     if (selected < 0) selected = 0; 
                 
@@ -1157,7 +1184,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'J':
                     if (selected < file_count - 1) {
-                        selected += (file_count > 100) ? file_count / 5 : file_count / 1.5;
+                        selected += 10;
                     }
                     if (selected >= file_count) selected = file_count - 1;
                 
@@ -1169,14 +1196,9 @@ int main(int argc, char *argv[]) {
                     selected = file_count - 1;
                     break;
                 case 'g': { 
-                    int next = getch();
-                    if (next == 'g') {
-                        selected = 0;
-                    } else {
-                        ungetch(next);
-                    }
+                    goto_help();
                     break;
-                }
+                    }
                 case 8: 
                     s_hidden = !s_hidden;
                     list(path); 
@@ -1208,22 +1230,29 @@ int main(int argc, char *argv[]) {
                     char full_path[MAX_PATH];
                     snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
                     
+                    struct stat st;
+                    if (stat(full_path, &st) != 0) {
+                        break; 
+                    }
+                    
                     int found = -1;
                     for (int i = 0; i < MAX_FILES; i++) {
-                        if (strcmp(marked_files[i].path, full_path) == 0) {
-                            found = i;
-                            break;
+                        if (marked_files[i].marked) {
+                            struct stat marked_st;
+                            if (stat(marked_files[i].path, &marked_st) == 0 && 
+                                marked_st.st_ino == st.st_ino) {
+                                found = i;
+                                break;
+                            }
                         }
                     }
                     
                     if (found >= 0) {
-                        marked_files[found].marked = !marked_files[found].marked;
-                        if (!marked_files[found].marked) {
-                            memset(marked_files[found].path, 0, MAX_PATH);
-                        }
+                        marked_files[found].marked = 0;
+                        memset(marked_files[found].path, 0, MAX_PATH);
                     } else {
                         for (int i = 0; i < MAX_FILES; i++) {
-                            if (marked_files[i].path[0] == '\0') {
+                            if (!marked_files[i].marked) {
                                 strncpy(marked_files[i].path, full_path, MAX_PATH);
                                 marked_files[i].marked = 1;
                                 break;
@@ -1247,7 +1276,7 @@ int main(int argc, char *argv[]) {
                             if (confrim_delete("marked files")) {
                                 for (int i = 0; i < MAX_FILES; i++) {
                                     if (marked_files[i].marked) {
-                                        rmfd(marked_files[i].path);
+                                        rm(marked_files[i].path);
                                         memset(marked_files[i].path, 0, MAX_PATH);
                                         marked_files[i].marked = 0;
                                     }
@@ -1259,7 +1288,7 @@ int main(int argc, char *argv[]) {
                             char full_path[MAX_PATH];
                             snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
                             if (confrim_delete(files[selected])) {
-                                rmfd(full_path);
+                                rm(full_path);
                                 list(path);
                                 selected = 0;
                             }
@@ -1310,8 +1339,25 @@ int main(int argc, char *argv[]) {
                     help_view();
                     break;
                 case 'i':  
-                    abmenu(); 
+                    doc_menu(); 
                     break;
+                case KEY_PPAGE:  // Page Up
+                    if (selected > 34) {
+                        selected -= 35;
+                    } else {
+                        selected = 0;
+                    }
+                    break;
+                
+                    case KEY_NPAGE:  // Page Down
+                    if (selected < file_count - 35) {
+                        selected += 35;
+                    } else {
+                        selected = file_count - 1;
+                    }
+                    break;
+                    
+                                      
             }
         }
     }

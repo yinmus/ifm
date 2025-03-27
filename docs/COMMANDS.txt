@@ -18,8 +18,11 @@ Controls:
   [Q]          Exit
   [F1]         Help on command
   [I]          Open ABOUT, LICENSE, and COMMANDS help
-  [gg]         Go to the first file
+  [g]          Go to ..
   [G]          Go to the last file
+
+
+
 
 Launch commands:
   Usage:
