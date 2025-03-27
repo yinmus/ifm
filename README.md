@@ -24,27 +24,6 @@ About [setup](docs/CFG-GUIDE)
 Download the latest [release](https://github.com/yinmus/ifm/releases/)
 Execute the commands according to the release instructions
 
-For example:
-
-___
-
-
-
-```
-tar -xzvf ifm-linux-x86_64.tar.gz # --extract
-```
-
-(Go to directory `ifm`)
-
-
-```
-./install.sh # -- install
-```
-
-
-```
-ifm / ifm -? / ifm -h / ifm path # -- run
-```
 
 ___
 
