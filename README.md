@@ -9,7 +9,7 @@ Config location: **$HOME/.config/ifm/config**
 
 When you start ifm, the config is automatically generated
 
-About [setup](CFG-GUIDE)  
+About [setup](docs/CFG-GUIDE)  
 
 
 ### Installation:
