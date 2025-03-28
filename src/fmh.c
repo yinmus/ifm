@@ -15,8 +15,10 @@ License : GPLv3
 #include <ncurses.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-#define IFM_VERSION "0.0.5"
+
+#define IFM_VERSION "0.0.6"
 
 
 
@@ -43,7 +45,7 @@ void goto_help() {
     mvwprintw(win, 9, 2, "t - cd /tmp");
     mvwprintw(win, 10, 2, "u - cd /usr");
     mvwprintw(win, 11, 2, "s - cd /srv");
-    mvwprintw(win, 12, 2, "? - cd /usr/share/doc");
+    mvwprintw(win, 12, 2, "? - cd /usr/share/doc/ifm");
     mvwprintw(win, 13, 2, "g - goto first file"); 
 
     wrefresh(win);
@@ -85,5 +87,14 @@ void Version() {
 
 
 
+void cls() {
+    clear();
+    refresh();
+}
+
+
+int compare(const void *a, const void *b) {
+    return strcasecmp((const char *)a, (const char *)b);
+}
 
 
