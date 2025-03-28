@@ -7,7 +7,7 @@ PREFIX = /usr/bin
 DESKTOP_FILE = assets/ifm.desktop
 ICON_SRC = assets/ifm.png
 ICON_DEST = /usr/share/icons/hicolor/128x128/apps/ifm.png
-DOC_FILES = docs/ABOUT.txt docs/COMMANDS.txt docs/CFG-GUIDE.txt LICENSE docs/CFG-GUIDE.txt
+DOC_FILES = docs/about.txt docs/commands.txt docs/cfg-guide.txt LICENSE.txt 
 DOC_DIR = /usr/share/doc/ifm
 
 all: $(BIN)
@@ -82,3 +82,4 @@ help:
 	@echo "  make install ins=1 - Install and delete 'ifm' source directory"
 	@echo "  make uninstall - Uninstall $(BIN)"
 	@echo "  make help     - Show this help message"
+ 
