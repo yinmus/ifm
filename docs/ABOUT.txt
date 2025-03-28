@@ -1,1 +1,0 @@
-Lightweight file manager built using the ncurses library for a interface. It provides basic file management operations such as browsing directories, opening files, creating and deleting files and directories, and displaying file informations

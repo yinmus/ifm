@@ -1,0 +1,12 @@
+Lightweight file manager built using the ncurses library for a interface. 
+It provides basic file management operations such as browsing directories, opening files, 
+creating and deleting files and directories, and displaying file informations
+
+Author : yinmus
+
+Copyright (c) 2025-2025
+
+Github url : https://github.com/yinmus/ifm.git
+
+License : GPLv3 
+
