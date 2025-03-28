@@ -180,35 +180,84 @@ void list(const char *path) {
 
 void rm(const char *path) {
     struct stat st;
-    if (stat(path, &st) != 0) {
-        perror("stat");
+    
+    if (lstat(path, &st) != 0) {
+        mvprintw(LINES - 1, 0, "Error: Cannot access '%s' - %s", path, strerror(errno));
+        refresh();
+        getch();
+        return;
+    }
+
+    if (S_ISLNK(st.st_mode)) {
+        if (unlink(path) != 0) {
+            mvprintw(LINES - 1, 0, "Error: Cannot remove symlink '%s' - %s", path, strerror(errno));
+            refresh();
+            getch();
+        }
         return;
     }
 
     if (S_ISDIR(st.st_mode)) {
         DIR *dir = opendir(path);
         if (!dir) {
-            perror("opendir");
+            mvprintw(LINES - 1, 0, "Error: Cannot open directory '%s' - %s", path, strerror(errno));
+            refresh();
+            getch();
             return;
         }
 
         struct dirent *entry;
         while ((entry = readdir(dir)) != NULL) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+                continue;
+            }
 
             char full_path[MAX_PATH];
             snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
 
-            rm(full_path); 
+            rm(full_path);
         }
         closedir(dir);
 
         if (rmdir(path) != 0) {
-            perror("rmdir");
+            if (errno == EACCES) {
+                if (chmod(path, 0700) == 0) {
+                    if (rmdir(path) != 0) {
+                        mvprintw(LINES - 1, 0, "Error: Cannot remove directory '%s' - %s", path, strerror(errno));
+                        refresh();
+                        getch();
+                    }
+                } else {
+                    mvprintw(LINES - 1, 0, "Error: Cannot change permissions for '%s' - %s", path, strerror(errno));
+                    refresh();
+                    getch();
+                }
+            } else {
+                mvprintw(LINES - 1, 0, "Error: Cannot remove directory '%s' - %s", path, strerror(errno));
+                refresh();
+                getch();
+            }
         }
-    } else {
+    } 
+    else {
         if (remove(path) != 0) {
-            perror("remove");
+            if (errno == EACCES) {
+                if (chmod(path, 0600) == 0) {
+                    if (remove(path) != 0) {
+                        mvprintw(LINES - 1, 0, "Error: Cannot remove file '%s' - %s", path, strerror(errno));
+                        refresh();
+                        getch();
+                    }
+                } else {
+                    mvprintw(LINES - 1, 0, "Error: Cannot change permissions for '%s' - %s", path, strerror(errno));
+                    refresh();
+                    getch();
+                }
+            } else {
+                mvprintw(LINES - 1, 0, "Error: Cannot remove file '%s' - %s", path, strerror(errno));
+                refresh();
+                getch();
+            }
         }
     }
 }
@@ -624,36 +673,65 @@ void UI() {
 }
 
 
-void fcontent(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        mvprintw(LINES - 1, 0, "Ошибка: файл %s не найден.", filename);
+
+void show_marked_files() {
+    int marked_count = 0;
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (marked_files[i].marked) marked_count++;
+    }
+
+    if (marked_count == 0) {
+        mvprintw(LINES - 1, 0, "No files marked");
         refresh();
         getch();
         return;
     }
 
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *buffer = malloc(file_size + 1);
-    if (!buffer) {
-        fclose(file);
-        mvprintw(LINES - 1, 0, "Ошибка: не удалось выделить память.");
-        refresh();
-        getch();
-        return;
-    }
-
-    fread(buffer, 1, file_size, file);
-    buffer[file_size] = '\0';
-    fclose(file);
-
-    int win_height = LINES / 2;
-    int win_width = COLS / 2;
+    int win_height = (marked_count + 4 < LINES - 4) ? marked_count + 4 : LINES - 4;
+    int win_width = COLS - 10;
     int start_y = (LINES - win_height) / 2;
     int start_x = (COLS - win_width) / 2;
+
+    
+
+    WINDOW *win = newwin(win_height, win_width, start_y, start_x);
+    keypad(win, TRUE);
+    wattron(win, COLOR_PAIR(1));
+    box(win, 0, 0);
+    wattroff(win, COLOR_PAIR(1));
+    mvwprintw(win, 0, 2, " Marked Files (%d) ", marked_count);
+
+    int line = 1;
+    for (int i = 0; i < MAX_FILES && line < win_height - 1; i++) {
+        if (marked_files[i].marked) {
+            char *filename = basename(marked_files[i].path);
+            
+            const char *icon = "";
+            struct stat st;
+            if (stat(marked_files[i].path, &st) == 0) {
+                if (S_ISDIR(st.st_mode)) {
+                    icon = ""; 
+                } else if (S_ISREG(st.st_mode)) {
+                    const char *ext = strrchr(filename, '.');
+                    if (ext) icon = icon_ext(ext + 1);
+                }
+            }
+            
+            mvwprintw(win, line++, 2, "%s %s", icon, marked_files[i].path);
+        }
+    }
+
+    wrefresh(win);
+    wgetch(win);
+    delwin(win);
+}
+
+
+void mark_help() {
+    int win_height = 12;  
+    int win_width = 50;   
+    int start_y = (LINES - win_height) / 1.3;
+    int start_x = 0;
 
     WINDOW *win = newwin(win_height, win_width, start_y, start_x);
     keypad(win, TRUE);
@@ -661,79 +739,220 @@ void fcontent(const char *filename) {
     box(win, 0, 0);
     wattroff(win, COLOR_PAIR(1));
 
-    int max_lines = win_height - 2;
-    int max_cols = win_width - 2;  
+    mvwprintw(win, 1, 2, "Macros for managing files with tags:");
+    mvwprintw(win, 2, 2, "G - Mark from current to end");
+    mvwprintw(win, 3, 2, "g - Mark from current to start");
+    mvwprintw(win, 4, 2, "uG - Unmark from current to end");
+    mvwprintw(win, 5, 2, "ug - Unmark from current to start");
+    mvwprintw(win, 7, 2, "R - Rename marked files");
+    mvwprintw(win, 8, 2, "c - Toggle mark on current file");
 
-    char *lines[1024];
-    int line_count = 0;
-    char *line = strtok(buffer, "\n");
-    while (line != NULL && line_count < 1023) {
-        int line_length = strlen(line);
-        int start_pos = 0;
+    wrefresh(win);
 
-        while (start_pos < line_length) {
-            int chunk_length = max_cols;
-            if (start_pos + chunk_length > line_length) {
-                chunk_length = line_length - start_pos;
-            }
-
-            lines[line_count] = malloc(chunk_length + 1);
-            if (!lines[line_count]) {
-                for (int i = 0; i < line_count; i++) {
-                    free(lines[i]);
-                }
-                free(buffer);
-                fclose(file);
-                return;
-            }
-
-            strncpy(lines[line_count], line + start_pos, chunk_length);
-            lines[line_count][chunk_length] = '\0';
-            start_pos += chunk_length;
-            line_count++;
-        }
-
-        line = strtok(NULL, "\n");
+    int ch = getch();
+    int next_ch = 0;
+    
+    if (ch == 'u') {
+        next_ch = getch();
     }
 
+    delwin(win);
+    touchwin(stdscr);
+    refresh();
+
+    if (ch != ERR) {
+        switch(ch) {
+            case 'G':
+                if (next_ch == 0) {
+                    for (int i = selected; i < file_count; i++) {
+                        char full_path[MAX_PATH];
+                        snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                        
+                        int already_marked = 0;
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                                already_marked = 1;
+                                break;
+                            }
+                        }
+                        
+                        if (!already_marked) {
+                            for (int j = 0; j < MAX_FILES; j++) {
+                                if (!marked_files[j].marked) {
+                                    strncpy(marked_files[j].path, full_path, MAX_PATH);
+                                    marked_files[j].marked = 1;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+                
+            case 'g': {
+                
+                for (int i = selected; i >= 0; i--) {
+                    char full_path[MAX_PATH];
+                    snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                        
+                    int already_marked = 0;
+                    for (int j = 0; j < MAX_FILES; j++) {
+                        if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                            already_marked = 1;
+                            break;
+                        }
+                    }
+                        
+                    if (!already_marked) {
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (!marked_files[j].marked) {
+                                strncpy(marked_files[j].path, full_path, MAX_PATH);
+                                marked_files[j].marked = 1;
+                                break;
+                                }
+                            }
+                        }
+                
+                    }
+                    break;
+                }
+            
+            case 'u': {
+                if (next_ch == 'G') {
+                    for (int i = selected; i < file_count; i++) {
+                        char full_path[MAX_PATH];
+                        snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                        
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                                marked_files[j].marked = 0;
+                                memset(marked_files[j].path, 0, MAX_PATH);
+                                break;
+                            }
+                        }
+                    }
+                } 
+                else if (next_ch == 'g') {
+                        for (int i = selected; i >= 0; i--) {
+                            char full_path[MAX_PATH];
+                            snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                            
+                            for (int j = 0; j < MAX_FILES; j++) {
+                                if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                                    marked_files[j].marked = 0;
+                                    memset(marked_files[j].path, 0, MAX_PATH);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+
+
+void fcontent(const char *filename) {
+    char tmp_path[MAX_PATH];
+    snprintf(tmp_path, sizeof(tmp_path), "/tmp/ifm_man_%d", getpid());
+    
+    char cmd[MAX_PATH * 2];
+    snprintf(cmd, sizeof(cmd), "man -l \"%s\" > \"%s\" 2>&1", filename, tmp_path);
+    
+    system(cmd);
+    
+    FILE *man_output = fopen(tmp_path, "r");
+    if (!man_output) {
+        mvprintw(LINES - 1, 0, "Error: Failed to get man output");
+        refresh();
+        getch();
+        return;
+    }
+
+    int win_height = LINES - 4;
+    int win_width = COLS - 4;
+    int start_y = 2;
+    int start_x = 2;
+    
+    WINDOW *win = newwin(win_height, win_width, start_y, start_x);
+    keypad(win, TRUE);
+    wattron(win, COLOR_PAIR(1));
+    box(win, 0, 0);
+    wattroff(win, COLOR_PAIR(1));
+    
+    char line[win_width];
+    int line_num = 0;
     int offset = 0;
+    
+    char *lines[1000]; 
+    int total_lines = 0;
+    
+    while (fgets(line, sizeof(line), man_output) && total_lines < 1000) {
+        line[strcspn(line, "\n")] = '\0'; 
+        lines[total_lines] = strdup(line);
+        total_lines++;
+    }
+    fclose(man_output);
+    unlink(tmp_path); 
 
     while (1) {
         werase(win);
         wattron(win, COLOR_PAIR(1));
         box(win, 0, 0);
+        mvwprintw(win, 0, 2, " MAN: %s ", filename);
         wattroff(win, COLOR_PAIR(1));
-
-        for (int i = 0; i < max_lines && i + offset < line_count; i++) {
-            mvwprintw(win, i + 1, 1, "%s", lines[i + offset]);
+        
+        for (int i = 0; i < win_height - 2 && i + offset < total_lines; i++) {
+            mvwprintw(win, i + 1, 1, "%.*s", win_width - 2, lines[i + offset]);
         }
-
+        
+        if (total_lines > win_height - 2) {
+            int scroll_pos = (offset * (win_height - 4)) / total_lines;
+            mvwaddch(win, 1 + scroll_pos, win_width - 1, ACS_CKBOARD);
+        }
+        
         wrefresh(win);
-
+        
         int ch = wgetch(win);
         switch (ch) {
             case KEY_UP:
                 if (offset > 0) offset--;
                 break;
             case KEY_DOWN:
-                if (offset < line_count - max_lines) offset++;
+                if (offset < total_lines - (win_height - 2)) offset++;
                 break;
             case KEY_PPAGE:
-                offset = (offset > max_lines) ? offset - max_lines : 0;
+                offset = (offset > (win_height - 2)) ? offset - (win_height - 2) : 0;
                 break;
             case KEY_NPAGE:
-                offset += max_lines;
-                if (offset > line_count - max_lines) {
-                    offset = line_count - max_lines;
+                offset += (win_height - 2);
+                if (offset > total_lines - (win_height - 2)) {
+                    offset = total_lines - (win_height - 2);
                 }
                 break;
-            case 27:  
+            case 'g':
+                offset = 0;
+                break;
+            case 'G':
+                offset = total_lines - (win_height - 2);
+                if (offset < 0) offset = 0;
+                break;
+            case KEY_HOME:
+                offset = 0;
+                break;
+            case KEY_END:
+                offset = total_lines - (win_height - 2);
+                if (offset < 0) offset = 0;
+                break;
+            case 27: 
             case 'q':
+            case 'i':
             case KEY_LEFT:
-                for (int i = 0; i < line_count; i++) {
+                for (int i = 0; i < total_lines; i++) {
                     free(lines[i]);
                 }
-                free(buffer);
                 delwin(win);
                 touchwin(stdscr);
                 refresh();
@@ -741,7 +960,6 @@ void fcontent(const char *filename) {
         }
     }
 }
-
 
 void doc_menu() {
     int menu_selected = 0;
@@ -794,7 +1012,7 @@ void doc_menu() {
             case '\n':
             case KEY_RIGHT:
                 if (strcmp(menu_items[menu_selected], "LICENSE") == 0) {
-                    fcontent("/usr/share/doc/ifm/LICENSE");
+                    fcontent("/usr/share/doc/ifm/LICENSE.txt");
                 } else if (strcmp(menu_items[menu_selected], "COMMANDS") == 0) {
                     fcontent("/usr/share/doc/ifm/COMMANDS.txt");
                 } else if (strcmp(menu_items[menu_selected], "ABOUT") == 0) {
@@ -812,7 +1030,7 @@ void doc_menu() {
                 touchwin(stdscr); 
                 refresh();
                 return;
-            case KEY_LEFT:  
+            case 'i':  
                 delwin(win);
                 touchwin(stdscr); 
                 refresh();
@@ -1335,12 +1553,19 @@ int main(int argc, char *argv[]) {
                 case 'o':
                     open_with(files[selected]);
                     break;
-                case KEY_F(1):  // F1
-                    help_view();
-                    break;
+
                 case 'i':  
                     doc_menu(); 
                     break;
+
+                case 'M':
+                    show_marked_files();
+                    break;
+                
+                case 'e':
+                    mark_help();
+                    break;
+                
                 case KEY_PPAGE:  // Page Up
                     if (selected > 34) {
                         selected -= 35;
@@ -1349,7 +1574,7 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 
-                    case KEY_NPAGE:  // Page Down
+                case KEY_NPAGE:  // Page Down
                     if (selected < file_count - 35) {
                         selected += 35;
                     } else {
