@@ -26,12 +26,9 @@ License : GPLv3
 #include <libgen.h>
 #include <pwd.h>
 #include <errno.h>
-
-
 #include "fmh.h"
 #include "icons.h"
 #include "ifm.h"
-
 
 
 
@@ -41,35 +38,10 @@ char path[MAX_PATH];
 char lpath[MAX_PATH];
 int s_hidden = 0;
 
+MarkedFile marked_files[MAX_FILES] = {0};
 
-typedef struct {
-    char path[MAX_PATH];
-    int marked;
-} MarkedFile;
-
-MarkedFile marked_files[MAX_FILES] = {0}; 
-
-typedef struct {
-    char video_viewer[MAX_NAME];
-    char audio_viewer[MAX_NAME];
-    char image_viewer[MAX_NAME];
-    char default_viewer[MAX_NAME];
-} Config;
-
-static int last_clicked = -1;
-static time_t last_click_time = 0;
-
-extern char **environ;
-
-
-int cpe(char *buffer, int max_len, const char *prompt);
-void goto_cmd(int next_char);
-int dirt(const char *path);
-int dist_s(const char *str);
-void cls();
-void hs_path(const char *relative_path, char *absolute_path);
-int compare(const void *a, const void *b);
-void hs_path(const char *relative_path, char *absolute_path);
+int last_clicked = -1;
+time_t last_click_time = 0;
 
 
 
@@ -383,7 +355,7 @@ void cr_file() {
 }
 
 
-void crt_dir() {
+void cr_dir() {
     char dirname[MAX_NAME];
     if (cpe(dirname, MAX_NAME, "Dir name")) {
         if (strlen(dirname) > 0) {
@@ -728,9 +700,9 @@ void show_marked_files() {
 
 
 void mark_help() {
-    int win_height = 12;  
-    int win_width = 50;   
-    int start_y = (LINES - win_height) / 1.3;
+    int win_height = 15;
+    int win_width = 50;
+    int start_y = (LINES - win_height) / 1.4 ;
     int start_x = 0;
 
     WINDOW *win = newwin(win_height, win_width, start_y, start_x);
@@ -742,10 +714,16 @@ void mark_help() {
     mvwprintw(win, 1, 2, "Macros for managing files with tags:");
     mvwprintw(win, 2, 2, "G - Mark from current to end");
     mvwprintw(win, 3, 2, "g - Mark from current to start");
-    mvwprintw(win, 4, 2, "uG - Unmark from current to end");
-    mvwprintw(win, 5, 2, "ug - Unmark from current to start");
-    mvwprintw(win, 7, 2, "R - Rename marked files");
-    mvwprintw(win, 8, 2, "c - Toggle mark on current file");
+    mvwprintw(win, 4, 2, "J - Mark next 5 files");
+    mvwprintw(win, 5, 2, "K - Mark previous 5 files");
+
+    mvwprintw(win, 7, 2, "uG - Unmark from current to end");
+    mvwprintw(win, 8, 2, "ug - Unmark from current to start");
+    mvwprintw(win, 9, 2, "uJ - Unmark next 5 files");
+    mvwprintw(win, 10, 2, "uK - Unmark previous 5 files");
+
+    mvwprintw(win, 12, 2, "d - Delete marked files");
+    mvwprintw(win, 13, 2, "r - Rename marked files");
 
     wrefresh(win);
 
@@ -790,7 +768,6 @@ void mark_help() {
                 break;
                 
             case 'g': {
-                
                 for (int i = selected; i >= 0; i--) {
                     char full_path[MAX_PATH];
                     snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
@@ -809,13 +786,12 @@ void mark_help() {
                                 strncpy(marked_files[j].path, full_path, MAX_PATH);
                                 marked_files[j].marked = 1;
                                 break;
-                                }
                             }
                         }
-                
                     }
-                    break;
                 }
+                break;
+            }
             
             case 'u': {
                 if (next_ch == 'G') {
@@ -833,26 +809,168 @@ void mark_help() {
                     }
                 } 
                 else if (next_ch == 'g') {
-                        for (int i = selected; i >= 0; i--) {
-                            char full_path[MAX_PATH];
-                            snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
-                            
-                            for (int j = 0; j < MAX_FILES; j++) {
-                                if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
-                                    marked_files[j].marked = 0;
-                                    memset(marked_files[j].path, 0, MAX_PATH);
-                                    break;
-                                }
+                    for (int i = selected; i >= 0; i--) {
+                        char full_path[MAX_PATH];
+                        snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                        
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                                marked_files[j].marked = 0;
+                                memset(marked_files[j].path, 0, MAX_PATH);
+                                break;
                             }
                         }
                     }
                 }
+                else if (next_ch == 'J') {
+                    int end = selected + 5;
+                    if (end >= file_count) end = file_count - 1;
+                    
+                    for (int i = selected; i <= end; i++) {
+                        char full_path[MAX_PATH];
+                        snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                        
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                                marked_files[j].marked = 0;
+                                memset(marked_files[j].path, 0, MAX_PATH);
+                                break;
+                            }
+                        }
+                    }
+                    selected = (selected + 5 < file_count) ? selected + 5 : file_count - 1;
+                }
+                else if (next_ch == 'K') {
+                    int start = selected - 5;
+                    if (start < 0) start = 0;
+                    
+                    for (int i = selected; i >= start; i--) {
+                        char full_path[MAX_PATH];
+                        snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                        
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                                marked_files[j].marked = 0;
+                                memset(marked_files[j].path, 0, MAX_PATH);
+                                break;
+                            }
+                        }
+                    }
+                    selected = (selected - 5 >= 0) ? selected - 5 : 0;
+                }
+                break;
+            }
+            
+            case 'J': {
+                int end = selected + 5;
+                if (end >= file_count) end = file_count - 1;
+                
+                for (int i = selected; i <= end; i++) {
+                    char full_path[MAX_PATH];
+                    snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                    
+                    int already_marked = 0;
+                    for (int j = 0; j < MAX_FILES; j++) {
+                        if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                            already_marked = 1;
+                            break;
+                        }
+                    }
+                    
+                    if (!already_marked) {
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (!marked_files[j].marked) {
+                                strncpy(marked_files[j].path, full_path, MAX_PATH);
+                                marked_files[j].marked = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                selected = (selected + 5 < file_count) ? selected + 5 : file_count - 1;
+                break;
+            }
+            
+            case 'K': {
+                int start = selected - 5;
+                if (start < 0) start = 0;
+                
+                for (int i = selected; i >= start; i--) {
+                    char full_path[MAX_PATH];
+                    snprintf(full_path, sizeof(full_path), "%s/%s", path, files[i]);
+                    
+                    int already_marked = 0;
+                    for (int j = 0; j < MAX_FILES; j++) {
+                        if (marked_files[j].marked && strcmp(marked_files[j].path, full_path) == 0) {
+                            already_marked = 1;
+                            break;
+                        }
+                    }
+                    
+                    if (!already_marked) {
+                        for (int j = 0; j < MAX_FILES; j++) {
+                            if (!marked_files[j].marked) {
+                                strncpy(marked_files[j].path, full_path, MAX_PATH);
+                                marked_files[j].marked = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                selected = (selected - 5 >= 0) ? selected - 5 : 0;
+                break;
+            }
+            
+            case 'd': {
+                int any_marked = 0;
+                for (int i = 0; i < MAX_FILES; i++) {
+                    if (marked_files[i].marked) any_marked = 1;
+                }
+                
+                if (any_marked) {
+                    if (confrim_delete("marked files")) {
+                        for (int i = 0; i < MAX_FILES; i++) {
+                            if (marked_files[i].marked) {
+                                rm(marked_files[i].path);
+                                memset(marked_files[i].path, 0, MAX_PATH);
+                                marked_files[i].marked = 0;
+                            }
+                        }
+                        list(path);
+                        selected = 0;
+                    }
+                }
+                memset(marked_files, 0, sizeof(marked_files));
+                break;
+            }
+            
+            case 'r': {
+                for (int i = 0; i < MAX_FILES; i++) {
+                    if (marked_files[i].marked) {
+                        char *filename = basename(marked_files[i].path);
+                        char dir[MAX_PATH];
+                        strncpy(dir, marked_files[i].path, MAX_PATH);
+                        dirname(dir);
+                        
+                        char new_name[MAX_NAME];
+                        strncpy(new_name, filename, MAX_NAME);
+                        if (cpe(new_name, MAX_NAME, "Rename to")) {
+                            char new_path[MAX_PATH];
+                            snprintf(new_path, sizeof(new_path), "%s/%s", dir, new_name);
+                            
+                            if (rename(marked_files[i].path, new_path) == 0) {
+                                strncpy(marked_files[i].path, new_path, MAX_PATH);
+                            }
+                        }
+                    }
+                }
+                list(path);
+                memset(marked_files, 0, sizeof(marked_files));
                 break;
             }
         }
     }
-
-
+}
 
 void fcontent(const char *filename) {
     char tmp_path[MAX_PATH];
@@ -985,9 +1103,10 @@ void doc_menu() {
         mvwprintw(win, 1, 1, "IFM");
         mvwprintw(win, 2, 1, "Lightweight file text manager.");
         mvwprintw(win, 3, 1, "Launch commands");
-        mvwprintw(win, 4, 1, "ifm -? - To open this menu"); 
-        mvwprintw(win, 5, 1, "ifm -h - To open help text");
-        mvwprintw(win, 6, 1, "ifm PATH - To open 'PATH' dir");
+        mvwprintw(win, 4, 1, "ifm -?     To open this menu"); 
+        mvwprintw(win, 5, 1, "ifm -h     To open help text");
+        mvwprintw(win, 6, 1, "ifm -V     To show version");
+        mvwprintw(win, 7, 1, "ifm PATH   To open 'PATH' dir");
 
         for (int i = 0; i < menu_count; i++) {
             if (i == menu_selected) {
@@ -1014,11 +1133,11 @@ void doc_menu() {
                 if (strcmp(menu_items[menu_selected], "LICENSE") == 0) {
                     fcontent("/usr/share/doc/ifm/LICENSE.txt");
                 } else if (strcmp(menu_items[menu_selected], "COMMANDS") == 0) {
-                    fcontent("/usr/share/doc/ifm/COMMANDS.txt");
+                    fcontent("/usr/share/doc/ifm/commands.txt");
                 } else if (strcmp(menu_items[menu_selected], "ABOUT") == 0) {
-                    fcontent("/usr/share/doc/ifm/ABOUT.txt");
+                    fcontent("/usr/share/doc/ifm/about.txt");
                 } else if (strcmp(menu_items[menu_selected], "CONFIG") == 0) {
-                    fcontent("/usr/share/doc/ifm/CFG-GUIDE.txt");
+                    fcontent("/usr/share/doc/ifm/cfg-guide.txt");
                 }
                 touchwin(stdscr);  
                 refresh();
@@ -1249,19 +1368,13 @@ int dist_s(const char *str) {
     return width;
 }
 
-void cls() {
-    clear();
-    refresh();
-}
+
 
 int dirt(const char *path) {
     struct stat statbuf;
     return (stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
 }
 
-int compare(const void *a, const void *b) {
-    return strcasecmp((const char *)a, (const char *)b);
-}
 
 
 void hs_path(const char *relative_path, char *absolute_path) {
@@ -1514,33 +1627,9 @@ int main(int argc, char *argv[]) {
                         break;
                     }
 
-                case 'R': {
-                    for (int i = 0; i < MAX_FILES; i++) {
-                        if (marked_files[i].marked) {
-                            char *filename = basename(marked_files[i].path);
-                            char dir[MAX_PATH];
-                            strncpy(dir, marked_files[i].path, MAX_PATH);
-                            dirname(dir);
-                            
-                            char new_name[MAX_NAME];
-                            strncpy(new_name, filename, MAX_NAME);
-                            if (cpe(new_name, MAX_NAME, "Rename to")) {
-                                char new_path[MAX_PATH];
-                                snprintf(new_path, sizeof(new_path), "%s/%s", dir, new_name);
-                                
-                                if (rename(marked_files[i].path, new_path) == 0) {
-                                    strncpy(marked_files[i].path, new_path, MAX_PATH);
-                                }
-                            }
-                        }
-                    }
-                    
-                    list(path);
-                    break;
-                }
-            
+
                 case 'm':
-                    crt_dir();
+                    cr_dir();
                     list(path);
                     break;
                 case 't':
