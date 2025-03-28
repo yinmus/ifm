@@ -12,7 +12,7 @@ License : GPLv3
 #ifndef FMH_H
 #define FMH_H
 
-void help_view();
+
 void reference();
 void Version();
 void goto_help();
