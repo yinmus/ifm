@@ -16,6 +16,8 @@ License : GPLv3
 void reference();
 void Version();
 void goto_help();
+void cls();
+int compare(const void *a, const void *b);
 
 
 #endif
