@@ -1,18 +1,27 @@
 Configuration of file viewers in ifm
 
 === Default settings ===
+
+
 video=vlc     -- Videos open with VLC
+
 audio=vlc     -- Audio files open with VLC
+
 image=eog     -- Images open with eog
+
 other=nano    -- All other files open with nano
 
 Configuration format:
 filetype=viewer
 
 === Example custom setup ===
+
 video=mpv       -- Use mpv for video files
+
 audio=vlc       -- Keep VLC for audio
+
 image=feh       -- Use feh as the image viewer
+
 other=nvim      -- Open other files with neovim
 
 Configuration file location: ~/.config/ifm/config
