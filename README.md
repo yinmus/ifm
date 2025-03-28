@@ -10,6 +10,19 @@
 </div>
 
 ____
+
+Examples of work, image of file manager
+
+![IMG](https://github.com/yinmus/a/blob/main/1.png)
+
+<p>
+<img src="https://github.com/yinmus/a/blob/main/1.png" width="49%" />
+<img src="https://github.com/yinmus/a/blob/main/2.png" width="49%" />
+</p>
+___
+
+
+
 ### Setting up the config:
 
 Config location: **$HOME/.config/ifm/config**
@@ -25,7 +38,6 @@ Download the latest [release](https://github.com/yinmus/ifm/releases/)
 Execute the commands according to the release instructions
 
 
-___
 
 
 ### Manual assembly:
