@@ -84,51 +84,6 @@ void Version() {
 }
 
 
-void help_view() {
-    def_prog_mode();
-    endwin();
 
-    FILE *pager = popen("less", "w"); 
 
-    if (pager == NULL) {
-        perror("popen");
-        return;
-    }
-
-    fprintf(pager, "IFM - Lightweight Ncurses File Manager\n");
-    fprintf(pager, "======================================\n");
-    fprintf(pager, "Controls:\n");
-    fprintf(pager, "  [K/J]         Move up/down\n");
-    fprintf(pager, "  [Shift+J]     Move down a portion of files\n");
-    fprintf(pager, "  [Shift+K]     Move up a portion of files\n");
-    fprintf(pager, "  [Enter/L]     Open file/dir\n");
-    fprintf(pager, "  [H]           Go back\n");
-    fprintf(pager, "  [CTRL + H]    Toggle hidden files\n");
-    fprintf(pager, "  [Alt + H]     Go home\n");
-    fprintf(pager, "  [T]           Create file\n");
-    fprintf(pager, "  [M]           Create dir\n");
-    fprintf(pager, "  [DEL]         Delete file/dir\n");
-    fprintf(pager, "  [R]           Rename file/dir\n");
-    fprintf(pager, "  [C]           Mark/unmark file/dir\n");
-    fprintf(pager, "  [Shift+R]     Rename marked files/dirs \n");
-    fprintf(pager, "  [O]     Open with custom viewer\n");
-    fprintf(pager, "  [Q]           Exit\n");
-    fprintf(pager, "  [F1]          Help\n");
-    fprintf(pager, "  [I]           Open ABOUT, LICENSE, and COMMANDS help.\n");
-    fprintf(pager, "  [gg]          Go to the first file\n");
-    fprintf(pager, "  [G]           Go to the last file\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "Mouse Controls:\n");
-    fprintf(pager, "  [Left Click]  Select/Open file/dir\n");
-    fprintf(pager, "  [Right Click] Go back\n");
-    fprintf(pager, "  [Scroll Up]   Move up\n");
-    fprintf(pager, "  [Scroll Down] Move down\n");
-    fprintf(pager, "\n");
-    fprintf(pager, "\n");
-
-    pclose(pager); 
-
-    reset_prog_mode();
-    refresh();
-}
 
