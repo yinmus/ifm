@@ -50,6 +50,7 @@ static const IconMapping icon_mappings[] = {
     {"cmake", ""},
     {"coffee", ""},
     {"conf", ""},
+    {"cfg", ""},
     {"cp", ""},
     {"cpio", ""},
     {"cpp", ""},
