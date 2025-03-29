@@ -90,7 +90,7 @@ void UI()
             if (S_ISDIR(st.st_mode))
             {
                 // icon = "";
-		        icon = "";
+		icon = "";
 
                 color_pair = 1;
             }
@@ -140,17 +140,17 @@ void UI()
             if (size > 1024)
             {
                 size /= 1024;
-                unit = "KB";
+                unit = "K";
             }
             if (size > 1024)
             {
                 size /= 1024;
-                unit = "MB";
+                unit = "M";
             }
             if (size > 1024)
             {
                 size /= 1024;
-                unit = "GB";
+                unit = "G";
             }
 
             char date_str[20];
@@ -169,14 +169,12 @@ void UI()
                      (st.st_mode & S_IWOTH) ? 'w' : '-',
                      (st.st_mode & S_IXOTH) ? 'x' : '-');
 
-            const char *file_type = S_ISDIR(st.st_mode) ? "Directory" : S_ISREG(st.st_mode) ? "File"
-                                                                                            : "Special";
-
             attron(COLOR_PAIR(3) | A_BOLD);
-            mvprintw(LINES - 2, 0, "%.2f %s | %s | %s ",
-                     size, unit, date_str, perms);
-            int current_len = strlen(files[selected]) + strlen(file_type) + strlen(date_str) +
-                              strlen(perms) + 60;
+            mvprintw(LINES - 2, 0, "%d/%d %s %s %.0f%s",
+                     selected + 1, file_count, date_str, perms, size, unit);
+            
+            int current_len = snprintf(NULL, 0, "%d/%d %s %s %.0f%s",
+                                     selected + 1, file_count, date_str, perms, size, unit);
             for (int i = current_len; i < COLS; i++)
             {
                 addch(' ');
@@ -184,6 +182,7 @@ void UI()
             attroff(COLOR_PAIR(3) | A_BOLD);
         }
     }
+
     else
     {
         attron(COLOR_PAIR(3));
