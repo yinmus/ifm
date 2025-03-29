@@ -609,7 +609,7 @@ void to_home()
 
 void mark_help()
 {
-    int win_height = 15;
+    int win_height = 17;
     int win_width = 50;
     int start_y = (LINES - win_height) / 1.4;
     int start_x = 0;
