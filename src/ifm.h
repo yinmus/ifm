@@ -13,11 +13,8 @@ License : GPLv3
 #define IFM_H
 
 #include <time.h>
+#include "fmh.h"
 
-
-
-
-void goto_cmd(int next_char);
 #define MAX_FILES 16384
 #define MAX_PATH 16384
 #define MAX_NAME 256
@@ -73,7 +70,6 @@ void goto_cmd(int next_char);
 int dist_s(const char *str);
 int dirt(const char *path);
 void hs_path(const char *relative_path, char *absolute_path);
-
 
 
 
