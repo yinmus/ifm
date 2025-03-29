@@ -9,14 +9,14 @@ License : GPLv3
 
 */
 
-#include "fmh.h"
-#include "ifm.h"
+
 
 #include <ncurses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "fmh.h"
+#include "ifm.h"
 
 #define IFM_VERSION "0.0.6"
 
@@ -96,5 +96,4 @@ void cls() {
 int compare(const void *a, const void *b) {
     return strcasecmp((const char *)a, (const char *)b);
 }
-
 
