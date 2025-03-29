@@ -13,13 +13,7 @@ ____
 
 Examples of work, image of file manager
 
-<div align="left">
-<p>
-<img src="https://github.com/yinmus/a/blob/main/1.png" width="60%" />
-</p>
-</div>
 
-___
 
 <p>
 <img src="https://github.com/yinmus/a/blob/main/2.png" width="49%" />
