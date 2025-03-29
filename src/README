@@ -1,5 +1,0 @@
-ifm.h -- File with constants ifm.c
-ifm.c -- Main logic file
-icons.h -- A file containing icons for different file types
-fmh.c -- Helper functions file
-fmh.h -- Helper function prototypes
