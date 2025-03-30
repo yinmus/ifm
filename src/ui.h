@@ -15,5 +15,4 @@ License : GPLv3
 void UI();
 void show_marked_files();
 
-
 #endif
