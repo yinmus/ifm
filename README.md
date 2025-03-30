@@ -16,10 +16,18 @@ Examples of work, image of file manager
 
 
 <p>
-<img src="https://github.com/yinmus/a/blob/main/p1.png" width="49%" />
-<img src="https://github.com/yinmus/a/blob/main/p2.png" width="49%" />
+  <H3> Ability to label files for faster file management </H3>
+ <img src="https://github.com/yinmus/a/blob/main/p2.png" width="50%" />
+  
 </p>
+
 ___
+
+<p>
+<H3> Beautiful interface with icons for many file extensions </H3>
+<img src="https://github.com/yinmus/a/blob/main/p1.png" width="78%" /> 
+</p>
+
 
 
 
