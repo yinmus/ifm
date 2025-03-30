@@ -38,15 +38,23 @@ void UI()
     init_color(8, 518, 627, 776); 
     init_pair(8, 8, COLOR_BLACK); 
     
-    attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(0, 0, "[ IFM ] - %s/", path);
-    
-    if (file_count > 0) {
-        attron(COLOR_PAIR(5)); 
+    attron(COLOR_PAIR(5) | A_BOLD);
+    mvprintw(0, 0, "[ IFM ] - ");
+
+    if (strcmp(path, "/") == 0) {
+        printw("/");
+    } else {
+        printw("%s", path);
+    }
+
+    if (file_count > 0 && selected >= 0 && selected < file_count) {
+        if (strcmp(path, "/") != 0 && path[strlen(path)-1] != '/') {
+            printw("/");
+        }
+        attron(COLOR_PAIR(1)); 
         printw("%s", files[selected]);
     }
     attroff(A_BOLD);
-
 
     int height = LINES - 4;
     if (selected < offset)
