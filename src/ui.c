@@ -89,8 +89,8 @@ void UI()
         {
             if (S_ISDIR(st.st_mode))
             {
-                // icon = "";
-		icon = "";
+                icon = "";
+		// icon = "";
 
                 color_pair = 1;
             }
