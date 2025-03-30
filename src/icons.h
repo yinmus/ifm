@@ -267,6 +267,7 @@ static const IconMapping icon_mappings[] = {{"txt", "󰈙", "#7ecd4d"},
                                             {"pfb", "", "#d7d7d8"},
                                             {"pfm", "", "#d7d7d8"},
                                             {"pfr", "", "#d7d7d8"},
+                                            {"desktop", "", "#513b76"},
                                             {"0", "", "#e9e9eb"}};
 
 typedef struct {
