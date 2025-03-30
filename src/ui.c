@@ -38,12 +38,15 @@ void UI()
     init_color(8, 518, 627, 776); 
     init_pair(8, 8, COLOR_BLACK); 
     
-    attron(COLOR_PAIR(8) | A_BOLD);
-    mvprintw(0, 0, "[ IFM ] - ");
-    wchar_t wpath[MAX_PATH];
-    mbstowcs(wpath, path, MAX_PATH);
-    waddwstr(stdscr, wpath);
-    attroff(COLOR_PAIR(4) | A_BOLD);
+    attron(COLOR_PAIR(1) | A_BOLD);
+    mvprintw(0, 0, "[ IFM ] - %s/", path);
+    
+    if (file_count > 0) {
+        attron(COLOR_PAIR(5)); 
+        printw("%s", files[selected]);
+    }
+    attroff(A_BOLD);
+
 
     int height = LINES - 4;
     if (selected < offset)
