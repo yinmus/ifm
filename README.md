@@ -16,8 +16,8 @@ Examples of work, image of file manager
 
 
 <p>
-<img src="https://github.com/yinmus/a/blob/main/2.png" width="49%" />
-<img src="https://github.com/yinmus/a/blob/main/3.png" width="49%" />
+<img src="https://github.com/yinmus/a/blob/main/t1.png" width="49%" />
+<img src="https://github.com/yinmus/a/blob/main/t2.png" width="49%" />
 </p>
 ___
 
