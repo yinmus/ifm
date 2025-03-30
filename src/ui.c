@@ -35,14 +35,15 @@ void UI()
     init_pair(5, COLOR_WHITE, COLOR_BLACK);
     init_pair(6, COLOR_RED, COLOR_BLACK);
     init_pair(7, COLOR_BLACK, COLOR_WHITE);
-
-    attron(COLOR_PAIR(4) | A_BOLD);
+    init_color(8, 518, 627, 776); 
+    init_pair(8, 8, COLOR_BLACK); 
+    
+    attron(COLOR_PAIR(8) | A_BOLD);
     mvprintw(0, 0, "[ IFM ] - ");
     wchar_t wpath[MAX_PATH];
     mbstowcs(wpath, path, MAX_PATH);
     waddwstr(stdscr, wpath);
     attroff(COLOR_PAIR(4) | A_BOLD);
-    mvprintw(0, COLS - 15, "Files: %d", file_count);
 
     int height = LINES - 4;
     if (selected < offset)
@@ -83,16 +84,16 @@ void UI()
 
         struct stat st;
         const char *icon = "";
-        int color_pair = 5;
+        int color_pair = 8;
 
         if (stat(full_path, &st) == 0)
         {
             if (S_ISDIR(st.st_mode))
             {
                 icon = "";
-		// icon = "";
+		        // icon = "";
 
-                color_pair = 1;
+                color_pair = 8;
             }
             else if (S_ISREG(st.st_mode))
             {
