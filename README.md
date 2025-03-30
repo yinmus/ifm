@@ -16,17 +16,39 @@ Examples of work, image of file manager
 
 
 <p>
+<H3> Beautiful interface with icons for many file extensions. The font must be set for the icons to display correctly</H3>
+<img src="https://github.com/yinmus/a/blob/main/p1.png" width="78%" /> 
+</p>
+
+### Arch / Manjaro Linux
+
+```
+sudo pacman -S noto-fonts
+```
+
+###  Debian / Ubuntu / Linux Mint / Pop!_OS
+
+```
+sudo apt install fonts-noto
+```
+
+### Fedora
+
+```
+sudo dnf install google-noto-fonts
+```
+
+
+
+___
+
+<p>
   <H3> Ability to label files for faster file management </H3>
  <img src="https://github.com/yinmus/a/blob/main/p2.png" width="50%" />
   
 </p>
 
 ___
-
-<p>
-<H3> Beautiful interface with icons for many file extensions </H3>
-<img src="https://github.com/yinmus/a/blob/main/p1.png" width="78%" /> 
-</p>
 
 
 
