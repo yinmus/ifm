@@ -20,7 +20,7 @@ License : GPLv3
 #define IFM_VERSION "0.0.6"
 
 void goto_help() {
-  int win_height = 25;
+  int win_height = 23;
   int win_width = 40;
   int start_y = (LINES - win_height) / 1.6;
   int start_x = 0;
@@ -52,7 +52,6 @@ void goto_help() {
   mvwprintw(win, 19, 2, "k - cd /home");
   mvwprintw(win, 20, 2, "r - cd /run");
   mvwprintw(win, 21, 2, "v - cd /var");
-  mvwprintw(win, 22, 2, "b - cd /boot");
 
   wrefresh(win);
 
