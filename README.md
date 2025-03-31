@@ -44,7 +44,7 @@ ___
 
 <p>
   <H3> Ability to label files for faster file management </H3>
- <img src="https://github.com/yinmus/a/blob/main/s2.png" width="50%" />
+ <img src="https://github.com/yinmus/a/blob/main/s2.png" width="78%" />
   
 </p>
 
