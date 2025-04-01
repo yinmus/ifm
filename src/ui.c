@@ -134,7 +134,7 @@ void UI() {
     }
 
     struct stat st;
-    IconResult icon_result = {"", "#6D8086"}; // Значение по умолчанию
+    IconResult icon_result = {"", "#6D8086"}; 
     int color_pair = 5;
 
     if (stat(full_path, &st) == 0) {
@@ -147,14 +147,12 @@ void UI() {
           color_pair = 2;
         }
 
-        // Сначала проверяем по имени файла
         icon_result = icon_filename(files[i + offset]);
 
-        // Если не нашли специфичное имя, проверяем по расширению
         const char *ext = strrchr(files[i + offset], '.');
-        if (ext && strlen(ext) > 1) { // Проверяем, что расширение существует
+        if (ext && strlen(ext) > 1) {
           IconResult ext_result = icon_ext(ext + 1);
-          if (strlen(ext_result.icon) > 0) { // Если нашли по расширению
+          if (strlen(ext_result.icon) > 0) { 
             icon_result = ext_result;
           }
         }
