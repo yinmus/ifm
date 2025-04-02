@@ -95,7 +95,7 @@ make uninstall
 ____
 
 ### [F1] - Call for help
-#### Weight - 60Kb
+#### Weight - 120Kb
 ___
 
 
