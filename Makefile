@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -O2
 LDFLAGS = -lncursesw -ltinfo -lmagic -D_GNU_SOURCE
-SRC = src/fmh.c src/ifm.c src/main.c src/ui.c
+SRC = src/fmh.c src/ifm.c src/ui.c src/main.c 
 BIN = ifm
 PREFIX = /usr/bin
 DESKTOP_FILE = ifm.desktop
