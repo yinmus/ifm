@@ -76,10 +76,10 @@ uninstall:
 
 help:
 	@echo "Available commands:"
-	@echo "  make          - Compile $(BIN)"
-	@echo "  make clean    - Remove compiled binary"
-	@echo "  make install ins=0 - Compile and install"
-	@echo "  make install ins=1 - Install and delete 'ifm' source directory"
-	@echo "  make uninstall - Uninstall $(BIN)"
-	@echo "  make help     - Show this help message"
+	@echo "  make                 - Compile $(BIN)"
+	@echo "  make clean           - Remove compiled binary"
+	@echo "  make install ins=0   - Compile and install"
+	@echo "  make install ins=1   - Install and delete 'ifm' source directory"
+	@echo "  make uninstall       - Uninstall $(BIN)"
+	@echo "  make help            - Show this help message"
  
