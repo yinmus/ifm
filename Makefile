@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2
+CFLAGS = -O3
 LDFLAGS = -lncursesw -ltinfo -lmagic -D_GNU_SOURCE
 SRC = src/fmh.c src/ifm.c src/ui.c src/main.c 
 BIN = ifm
