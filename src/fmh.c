@@ -1,81 +1,36 @@
 /*
-======================================
-    IFM by yinmus (c) 2025-2025
-======================================
-
-Relative path : ifm/src/fmh.c
-Github url : https://github.com/yinmus/ifm.git
-License : GPLv3
+   fmh.c
+   https://github.com/yinmus/ifm.git
 
 */
 
 #include "fmh.h"
 
-#include <locale.h>
+#include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "ifm.h"
 
-#define IFM_VERSION "0.0.6"
-
-void goto_help() {
-  int win_height = 16;
-  int win_width = 40;
-  int start_y = (LINES - win_height) / 1.3;
-  int start_x = 0;
-
-  WINDOW* win = newwin(win_height, win_width, start_y, start_x);
-  keypad(win, TRUE);
-  wattron(win, COLOR_PAIR(1));
-  box(win, 0, 0);
-  wattroff(win, COLOR_PAIR(1));
-
-  mvwprintw(win, 1, 2, "Go to:");
-  mvwprintw(win, 2, 2, "h - cd ~");
-  mvwprintw(win, 3, 2, "/ - cd /");
-  mvwprintw(win, 4, 2, "d - cd /dev");
-  mvwprintw(win, 5, 2, "e - cd /etc");
-  mvwprintw(win, 6, 2, "m - cd /media or /run/media");
-  mvwprintw(win, 7, 2, "M - cd /mnt");
-  mvwprintw(win, 8, 2, "o - cd /opt");
-  mvwprintw(win, 9, 2, "t - cd /tmp");
-  mvwprintw(win, 10, 2, "u - cd /usr");
-  mvwprintw(win, 11, 2, "s - cd /srv");
-  mvwprintw(win, 12, 2, "? - cd /usr/share/doc/ifm");
-  mvwprintw(win, 13, 2, "g - goto first file");
-
-  wrefresh(win);
-
-  int ch = getch();
-  delwin(win);
-  touchwin(stdscr);
-  refresh();
-
-  if (ch != ERR) {
-    goto_cmd(ch);
-  }
-}
-
 void reference() {
   printf("IFM - Lightweight Ncurses File Manager\n");
-  printf("Version: %s\n\n", IFM_VERSION);
   printf("Usage: ifm [OPTION] [PATH]\n\n");
   printf("Options:\n");
-  printf("  -h, -?    Show this help message\n");
-  printf("  -V        Show version information\n");
-  printf(
-      "  PATH      Open the specified directory (default: current "
-      "directory)\n\n");
+  printf("  --help                  show this help message\n");
+  printf("  -V                      show version information\n");
+  printf("  PATH                    open the specified directory\n\n");
   printf("Examples:\n");
-  printf("  ifm                     Open current directory\n");
-  printf("  ifm Documents           Open 'Documents' directory\n");
-  printf("  ifm -h                  Show this help message\n");
-  printf("  ifm -?                  Open the menu\n");
-  printf("  ifm -V                  Show version information\n");
+  printf("  ifm                     open current directory\n");
+  printf("  ifm Dir/                open '*/Dir/' directory\n");
+  printf("  ifm -h                  show this help message\n");
+  printf("  ifm -V                  show version information\n");
+  printf("\n\nVersion: %s\n\n", IFM_VERSION);
 }
 
 void Version() {
@@ -86,50 +41,26 @@ void Version() {
   printf("Please report bugs: <https://github.com/yinmus/ifm/issues>\n");
 }
 
-void cls() {
-  clear();
-  refresh();
-}
+int compare(const void *a, const void *b) {
+  const char *name_a = (const char *)a;
+  const char *name_b = (const char *)b;
 
-int compare(const void* a, const void* b) {
-  const char* name1 = (const char*)a;
-  const char* name2 = (const char*)b;
+  char path_a[MAX_PATH], path_b[MAX_PATH];
+  snprintf(path_a, sizeof(path_a), "%s/%s", path, name_a);
+  snprintf(path_b, sizeof(path_b), "%s/%s", path, name_b);
 
-  char path1[MAX_PATH], path2[MAX_PATH];
-  snprintf(path1, sizeof(path1), "%s/%s", path, name1);
-  snprintf(path2, sizeof(path2), "%s/%s", path, name2);
+  struct stat stat_a, stat_b;
+  int is_dir_a = (stat(path_a, &stat_a) == 0 && S_ISDIR(stat_a.st_mode));
+  int is_dir_b = (stat(path_b, &stat_b) == 0 && S_ISDIR(stat_b.st_mode));
 
-  struct stat stat1, stat2;
-  int is_dir1 = (stat(path1, &stat1) == 0) && S_ISDIR(stat1.st_mode);
-  int is_dir2 = (stat(path2, &stat2) == 0) && S_ISDIR(stat2.st_mode);
-
-  if (is_dir1 && !is_dir2)
-    return -1;
-  if (!is_dir1 && is_dir2)
-    return 1;
-
-  return strcasecmp(name1, name2);
-}
-
-int dirt(const char* path) {
-  struct stat statbuf;
-  return (stat(path, &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
-}
-
-int dist_s(const char* str) {
-  setlocale(LC_ALL, "");
-  int width = 0;
-  wchar_t wc;
-  const char* ptr = str;
-  size_t len = strlen(str);
-
-  while (*ptr != '\0' && len > 0) {
-    int consumed = mbtowc(&wc, ptr, len);
-    if (consumed <= 0)
-      break;
-    width += wcwidth(wc);
-    ptr += consumed;
-    len -= consumed;
+  if (is_dir_a == is_dir_b) {
+    return strcasecmp(name_a, name_b);
   }
-  return width;
+  return is_dir_b - is_dir_a;
+}
+
+void reset_terminal(int sig) {
+  def_prog_mode();
+  endwin();
+  refresh();
 }

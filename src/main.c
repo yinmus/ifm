@@ -1,15 +1,10 @@
 /*
-======================================
-    IFM by yinmus (c) 2025-2025
-======================================
-
-Relative path : ifm/src/main.c
-Github url : https://github.com/yinmus/ifm.git
-License : GPLv3
+   main.c
+   https://github.com/yinmus/ifm.git
 
 */
 
-#include <errno.h>
+#include <assert.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <stdio.h>
@@ -19,295 +14,285 @@ License : GPLv3
 #include <time.h>
 #include <unistd.h>
 
+#include "cfg.h"
 #include "fmh.h"
 #include "ifm.h"
 #include "ui.h"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   setlocale(LC_ALL, "ru_RU.UTF-8");
 
+  setenv("ESCDELAY", "25", 1);
   create_default_config();
 
   if (argc > 1) {
-    if (strcmp(argv[1], "-h") == 0) {
+    if (strcmp(argv[1], "--help") == 0) {
+      endwin();
       reference();
       return 0;
-    } else if (strcmp(argv[1], "-?") == 0) {
-      initscr();
-      noecho();
-      curs_set(0);
-      keypad(stdscr, TRUE);
-      start_color();
-      init_pair(1, COLOR_CYAN, COLOR_BLACK);
-      init_pair(2, COLOR_GREEN, COLOR_BLACK);
-
-      doc_menu();
-
-      endwin();
-      return 0;
     } else if (strcmp(argv[1], "-V") == 0) {
+      endwin();
       Version();
       return 0;
     } else {
-      hs_path(argv[1], path);
+      resolve_path(argv[1], path, sizeof(path));
       struct stat st;
       if (stat(path, &st) != 0 || !S_ISDIR(st.st_mode)) {
-        getcwd(path, sizeof(path));
+        printf("\n\n\033[1m!Cannot open\033[0m\n\n\n");
+        return 1;
       }
     }
   } else {
     getcwd(path, sizeof(path));
   }
 
-  initscr();
+  assert(initscr() != NULL);
+  start_color();
+
   noecho();
   curs_set(0);
   keypad(stdscr, TRUE);
-  start_color();
-  init_pair(1, COLOR_CYAN, COLOR_BLACK);
-  init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
-  mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+  assert(mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL) != 0);
   mouseinterval(0);
 
-  list(path);
+  list(path, NULL, false, false);
   strncpy(lpath, path, sizeof(lpath));
 
   while (1) {
-    UI();
+    Display();
+    int move_count = 1;
+    int last_clicked = -1;
     int ch = getch();
 
     if (ch == KEY_MOUSE) {
       MEVENT event;
-      if (getmouse(&event) == OK) {
-        if (event.bstate & BUTTON1_PRESSED) {
-          int y = event.y - 2;
-          if (y >= 0 && y < file_count) {
-            int clicked_item = y + offset;
+      assert(getmouse(&event) == OK);
+      if (event.bstate & LMB) {
+        int y = event.y - 2;
+        if (y >= 0 && y < file_count) {
+          int clicked_item = y + offset;
 
-            if (clicked_item == last_clicked &&
-                (time(NULL) - last_click_time) * 1000 < 2000) {
-              char full_path[MAX_PATH];
-              snprintf(full_path, sizeof(full_path), "%s/%s", path,
-                       files[clicked_item]);
-
-              if (dirt(full_path)) {
-                strncpy(lpath, path, sizeof(lpath));
-                chdir(full_path);
-                getcwd(path, sizeof(path));
-                list(path);
-                selected = 0;
-                offset = 0;
-              } else {
-                open_file(files[clicked_item]);
-              }
-              last_clicked = -1;
-            } else {
-              selected = clicked_item;
-              last_clicked = clicked_item;
-              last_click_time = time(NULL);
-            }
-          }
-        } else if (event.bstate & BUTTON3_PRESSED) {
-          to_back();
-        } else if (event.bstate & BUTTON4_PRESSED) {
-          if (selected > 0)
-            selected--;
-        } else if (event.bstate & BUTTON5_PRESSED) {
-          if (selected < file_count - 1)
-            selected++;
-        }
-      }
-    } else {
-      switch (ch) {
-        case 'q':
-          clear();
-          endwin();
-          return 0;
-          break;
-        case 'h':
-        case KEY_LEFT:
-          to_back();
-          break;
-        case 'k':
-        case KEY_UP:
-          if (selected > 0)
-            selected--;
-          break;
-
-        case 'K':
-          if (selected > 0) {
-            selected -= 10;
-          }
-          if (selected < 0)
-            selected = 0;
-
-          break;
-
-        case 'j':
-        case KEY_DOWN:
-          if (selected < file_count - 1)
-            selected++;
-          break;
-        case 'J':
-          if (selected < file_count - 1) {
-            selected += 10;
-          }
-          if (selected >= file_count)
-            selected = file_count - 1;
-
-          break;
-
-        case 'G':
-          selected = file_count - 1;
-          break;
-        case 'g': {
-          goto_help();
-          break;
-        }
-        case 8:
-          s_hidden = !s_hidden;
-          list(path);
-          selected = 0;
-          offset = 0;
-          clear();
-          UI();
-          break;
-        case 10:
-        case 'l':
-        case KEY_RIGHT: {
-          char full_path[MAX_PATH];
-          snprintf(full_path, sizeof(full_path), "%s/%s", path,
-                   files[selected]);
-
-          if (dirt(full_path)) {
-            strncpy(lpath, path, sizeof(lpath));
-            chdir(full_path);
-            getcwd(path, sizeof(path));
-            list(path);
-            selected = 0;
-            offset = 0;
-          } else {
-            open_file(files[selected]);
-          }
-          break;
-        }
-
-        case 'c': {
-          char full_path[MAX_PATH];
-          snprintf(full_path, sizeof(full_path), "%s/%s", path,
-                   files[selected]);
-
-          struct stat st;
-          if (stat(full_path, &st) != 0) {
-            break;
-          }
-
-          int found = -1;
-          for (int i = 0; i < MAX_FILES; i++) {
-            if (marked_files[i].marked) {
-              struct stat marked_st;
-              if (stat(marked_files[i].path, &marked_st) == 0 &&
-                  marked_st.st_ino == st.st_ino) {
-                found = i;
-                break;
-              }
-            }
-          }
-
-          if (found >= 0) {
-            marked_files[found].marked = 0;
-            memset(marked_files[found].path, 0, MAX_PATH);
-          } else {
-            for (int i = 0; i < MAX_FILES; i++) {
-              if (!marked_files[i].marked) {
-                strncpy(marked_files[i].path, full_path, MAX_PATH);
-                marked_files[i].marked = 1;
-                break;
-              }
-            }
-          }
-
-          if (selected < file_count - 1) {
-            selected++;
-          }
-          break;
-        }
-
-        case KEY_DC: {
-          int any_marked = 0;
-          for (int i = 0; i < MAX_FILES; i++) {
-            if (marked_files[i].marked)
-              any_marked = 1;
-          }
-
-          if (any_marked) {
-            if (confrim_delete("marked files")) {
-              for (int i = 0; i < MAX_FILES; i++) {
-                if (marked_files[i].marked) {
-                  rm(marked_files[i].path);
-                  memset(marked_files[i].path, 0, MAX_PATH);
-                  marked_files[i].marked = 0;
-                }
-              }
-              list(path);
-              selected = 0;
-            }
-          } else {
+          if (clicked_item == last_clicked) {
             char full_path[MAX_PATH];
             snprintf(full_path, sizeof(full_path), "%s/%s", path,
-                     files[selected]);
-            if (confrim_delete(files[selected])) {
-              rm(full_path);
-              list(path);
+                     files[clicked_item]);
+
+            if (DIRT(full_path)) {
+              strncpy(lpath, path, sizeof(lpath));
+              assert(chdir(full_path) == 0);
+              assert(getcwd(path, sizeof(path)) != NULL);
+              list(path, NULL, false, false);
               selected = 0;
+              offset = 0;
+            } else {
+              open_file(files[clicked_item]);
             }
+            last_clicked = -1;
+          } else {
+            selected = clicked_item;
+            last_clicked = clicked_item;
           }
+        }
+      } else if (event.bstate & RMB) {
+        to_back();
+      } else if (event.bstate & MWU) {
+        if (selected > 0)
+          selected--;
+      } else if (event.bstate & MWD) {
+        if (selected < file_count - 1)
+          selected++;
+      }
+    } else if (ch >= '0' && ch <= '9') {
+      move_count = ch - '0';
+
+      while ((ch = getch()) >= '0' && ch <= '9') {
+        if (move_count < 1000000) {
+          move_count = move_count * 10 + (ch - '0');
+        }
+      }
+
+      if (ch == 'j' || ch == KEY_DOWN) {
+        selected += move_count;
+        if (selected >= file_count)
+          selected = file_count - 1;
+        continue;
+      } else if (ch == 'k' || ch == KEY_UP) {
+        selected -= move_count;
+        if (selected < 0)
+          selected = 0;
+        continue;
+      }
+
+    } else {
+      switch (ch) {
+      case 'q':
+        __EXIT;
+        return 0;
+        break;
+
+      case 'h':
+      case KEY_LEFT:
+        __BACK;
+        break;
+
+      case 'k':
+      case KEY_UP:
+        __SCROLL_UP;
+        break;
+
+      case 'K':
+        if (selected > 0) {
+          selected -= 10;
+        }
+        if (selected < 0)
+          selected = 0;
+        break;
+
+      case 'j':
+      case KEY_DOWN:
+        __SCROLL_DOWN;
+        break;
+
+      case 'J':
+        if (selected < file_count - 1) {
+          selected += 10;
+        }
+        if (selected >= file_count)
+          selected = file_count - 1;
+        break;
+
+      case 'G':
+        __LAST_FILE;
+        break;
+
+      case 'g':
+        __GOTO;
+        break;
+
+      case '.':
+      case CONTROL('H'):
+        __HIDDEN_FILES;
+        break;
+
+      case 10:
+      case 'l':
+      case KEY_RIGHT:
+        __TO_FRWD;
+        break;
+
+      case 'v':
+        __MARK_FILE;
+        break;
+
+      case KEY_DC:
+      case 'x':
+        __DELETE;
+        break;
+
+      case 'm':
+        __MAKE_DIR;
+        break;
+
+      case '-':
+        __TO_PREV;
+        break;
+
+      case 't':
+        __MAKE_FILE;
+        break;
+
+      case 'r':
+        __RENAME;
+        break;
+
+      case CONTROL('o'):
+      case 'o':
+        __OPEN_WITH;
+        break;
+
+      case 'M':
+        __MARK_FILES_MENU;
+        break;
+
+      case 'e':
+        __HANDLE_MARKED_FILES;
+        break;
+
+      case PAGE_UP:
+      case CONTROL('U'):
+
+        __PGUP_HANDLE;
+        break;
+
+      case PAGE_DOWN:
+      case CONTROL('D'):
+
+        __PGDN_HANDLE;
+        break;
+
+      case F(5):
+        __UPDATE__;
+        break;
+
+      case TAB:
+        __TAB_HANDLE;
+        break;
+
+      case 'y':
+        __COPY;
+        break;
+
+      case 'c':
+        __CUT;
+        break;
+
+      case 'p':
+        __PASTE;
+        break;
+
+      case '/':
+        __SEARCH;
+        break;
+
+      case ':':
+      case ';':
+        __VI;
+        break;
+
+      case 'R':
+        line_clear(LINES - 1);
+        mvwprintw(stdscr, LINES - 1, 0, "reset 'b'uffer | 't'erminal");
+        ch = getch();
+        if (ch == 'b') {
+          cp_buff_count = 0;
+          line_clear(LINES - 1);
+          mvwprintw(stdscr, LINES - 1, 0, "reset copy buffer");
+          gtimeout(500);
+        } else if (ch == 't') {
+          reset_terminal(0);
+          list(path, NULL, false, false);
+          line_clear(LINES - 1);
+          mvwprintw(stdscr, LINES - 1, 0, "terminal reset");
+          gtimeout(500);
           break;
         }
 
-        case 'm':
-          cr_dir();
-          list(path);
-          break;
-        case 't':
-          cr_file();
-          list(path);
-          break;
-        case 'r':
-          ren(files[selected]);
-          break;
-        case 'o':
-          open_with(files[selected]);
-          break;
+      case ',':
+        line_clear(LINES - 1);
+        mvwprintw(stdscr, LINES - 1, 0, path);
+        gtimeout(2000);
+        break;
 
-        case 'i':
-          doc_menu();
-          break;
-
-        case 'M':
-          show_marked_files();
-          break;
-
-        case 'e':
-          mark_help();
-          break;
-
-        case KEY_PPAGE:  // Page Up
-          if (selected > 34) {
-            selected -= 35;
-          } else {
-            selected = 0;
-          }
-          break;
-
-        case KEY_NPAGE:  // Page Down
-          if (selected < file_count - 35) {
-            selected += 35;
-          } else {
-            selected = file_count - 1;
-          }
-          break;
+      case 'a':
+        list(path, NULL, false, true);
+        break;
+      case 'N':
+        search_UP();
+        break;
+      case 'n':
+        search_DN();
+        break;
       }
     }
   }

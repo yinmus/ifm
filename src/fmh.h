@@ -1,23 +1,17 @@
 /*
-======================================
-    IFM by yinmus (c) 2025-2025
-======================================
-
-Relative path : ifm/src/fmh.h
-Github url : https://github.com/yinmus/ifm.git
-License : GPLv3
+   fmh.h
+   https://github.com/yinmus/ifm.git
 
 */
 
 #ifndef FMH_H
 #define FMH_H
 
+#define IFM_VERSION "0.1.6"
+
 void reference();
 void Version();
-void goto_help();
-void cls();
-int compare(const void* a, const void* b);
-int dirt(const char* path);
-int dist_s(const char* str);
+int compare(const void *a, const void *b);
+void reset_terminal(int sig);
 
 #endif

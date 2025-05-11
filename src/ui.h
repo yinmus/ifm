@@ -1,18 +1,15 @@
-/*
-======================================
-    IFM by yinmus (c) 2025-2025
-======================================
 
-Relative path : ifm/src/ui.h
-Github url : https://github.com/yinmus/ifm.git
-License : GPLv3
+/*
+   ui.h
+   https://github.com/yinmus/ifm.git
 
 */
 
 #ifndef UI_H
 #define UI_H
 
-void UI();
+void shorten_path(char *dest, const char *src, int max_width);
+void Display();
 void show_marked_files();
 
 #endif
