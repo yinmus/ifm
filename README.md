@@ -17,7 +17,6 @@ Examples of work, image of file manager
 
 <p>
 <H3> Beautiful interface with icons for many file extensions. The font must be set for the icons to display correctly</H3>
-<img src="https://github.com/yinmus/a/blob/main/p1.png" width="78%" /> 
 </p>
 
 ### Arch / Manjaro Linux
