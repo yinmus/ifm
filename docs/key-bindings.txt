@@ -1,0 +1,69 @@
+
+        h, <lt>    back
+        l, <rt>    open
+        j, <dn>    selected += 1
+        k, <up>    selected -= 1
+    <C-d>, PgDn    page down
+    <C-u>, PgUp    page up
+              G    selected = fc - 1
+          (11j  = selected +/- = 11)
+          num+j    selected += num 
+          num+k    selected -= num 
+              -    aka cd -
+
+              -    cd - 
+             gg    to top
+             gG    to end
+             gh    cd ~
+             g/    cd /
+             ge    cd /etc/
+             gm    cd /run/media/ | /media
+             gd    cd /dev/
+             gM    cd /mnt/
+             gt    cd /tmp/
+             gs    cd /srv/
+             gv    cd /var/
+             g?    cd /usr/share/doc/ifm/
+             go    cd /opt/
+             gr    cd /run/
+             gc    cd /sys/
+             gu    cd /usr/
+
+
+       <C-o>, o    open with
+              r    rename
+         del, x    del
+             cx    cut
+              m    mkdir 
+              t    touch file 
+             yy    copy
+
+              v    mark
+             eG    mark to end 
+             eg    mark to top
+             ej    mark next 5
+             ek    mark prev 5
+             ea    mark all in dir
+             ed    delete marked
+             er    rename marked
+            euG    unmark to end
+            eug    unmark to top
+            euj    unmark next 5
+            euk    unmark prev 5
+            euA    unmark ALL
+            eua    unmark all in dir
+
+
+              q    quit
+       <C-h>, .    toggle hidden files
+              /    search
+              n    std ch's 
+              N    inv ch's
+              :    command mode
+             f5   update
+              M    mark files list
+
+                
+              ,    show absolute path
+
+
