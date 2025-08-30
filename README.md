@@ -16,29 +16,11 @@ Examples of work, image of file manager
 
 
 <p>
-<H3> Beautiful interface with icons for many file extensions. The font must be set for the icons to display correctly</H3>
+<H3>Beautiful interface with icons for many file extensions. The font must be set for the correct display of icons (icons can be disabled)</H3>
+<img src="https://github.com/yinmus/a/blob/main/p1.png" width="78%" /> 
 </p>
 
-### Arch / Manjaro Linux
-
-```
-sudo pacman -S noto-fonts
-```
-
-###  Debian / Ubuntu / Linux Mint / Pop!_OS
-
-```
-sudo apt install fonts-noto
-```
-
-### Fedora
-
-```
-sudo dnf install google-noto-fonts
-```
-
-
-
+***need noto fonts to icons**
 ___
 
 <p>
@@ -49,16 +31,14 @@ ___
 
 ___
 
+___
 
+<p>
 
+ifm-ar "built-in" archiver, which can be used in a narrow way outside the file manager
 
-### Setting up the config:
-
-Config location: **$HOME/.config/ifm/config**
-
-When you start ifm, the config is automatically generated
-
-About [setup](docs/CFG-GUIDE.txt)  
+</p>
+___
 
 
 ### Installation:
@@ -66,9 +46,23 @@ About [setup](docs/CFG-GUIDE.txt)
 Download the latest [release](https://github.com/yinmus/ifm/releases/)
 Execute the commands according to the release instructions
 
+
+
+
+### Manual assembly:
+
+(Clone repo)
+
+```
+make install
+```
+```
+make uninstall
+```
 ____
 
-#### Weight - 60Kb
+
+#### Weight - ~140Kb
 ___
 
 
