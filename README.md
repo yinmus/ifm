@@ -4,9 +4,6 @@
 
 <div align="center">
 <H1>IFM - light, easy text file manager</H1>
-<a href="https://github.com/yinmus/ifm/">
-<img src="ifm-logo.png" width="750">
-</a>
 </div>
 
 ____
