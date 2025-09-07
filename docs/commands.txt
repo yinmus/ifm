@@ -1,9 +1,0 @@
-            quit, q     quit
-               help     help    
-         clear, cls     clear screen
-    nohlsearch, noh     unhlght 
-                  +     go up one dir
-                  -     go up one dir
-                +{n}    selected -= n
-                -{n}    selected -= n
-
