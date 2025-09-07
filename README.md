@@ -32,10 +32,7 @@ ___
 (Clone repo)
 
 ```
-make install
-```
-```
-make uninstall
+make clean install
 ```
 ____
 
