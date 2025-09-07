@@ -8,15 +8,11 @@
 
 ____
 
-Examples of work, image of file manager
-
-
-
 <p>
-<H3>Beautiful interface with icons for many file extensions. The font must be set for the correct display of icons (icons can be disabled)</H3>
+<H3>Beautiful interface with icons for many file extensions. To display icons, you need to set up a font, for example, Noto Fonts or another (icons can be disabled)</H3>
 </p>
 
-***need noto fonts to icons**
+*****
 ___
 
 <p>
