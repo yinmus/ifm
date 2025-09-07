@@ -21,8 +21,6 @@ ___
 
 ___
 
-___
-
 <p>
 
 ifm-ar "built-in" archiver, which can be used in a narrow way outside the file manager
