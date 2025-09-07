@@ -12,7 +12,6 @@ ____
 <H3>Beautiful interface with icons for many file extensions. To display icons, you need to set up a font, for example, Noto Fonts or another (icons can be disabled)</H3>
 </p>
 
-*****
 ___
 
 <p>
