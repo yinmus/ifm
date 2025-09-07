@@ -30,15 +30,6 @@ ifm-ar "built-in" archiver, which can be used in a narrow way outside the file m
 </p>
 ___
 
-
-### Installation:
-
-Download the latest [release](https://github.com/yinmus/ifm/releases/)
-Execute the commands according to the release instructions
-
-
-
-
 ### Manual assembly:
 
 (Clone repo)
