@@ -103,9 +103,11 @@ int main(int argc, char *argv[]) {
       } else if (event.bstate & RMB) {
         to_back();
       } else if (event.bstate & MWU) {
-        if (selected > 0) selected--;
+        if (selected > 0)
+          selected--;
       } else if (event.bstate & MWD) {
-        if (selected < file_count - 1) selected++;
+        if (selected < file_count - 1)
+          selected++;
       }
     } else if (ch >= '0' && ch <= '9') {
       move_count = ch - '0';
@@ -118,180 +120,184 @@ int main(int argc, char *argv[]) {
 
       if (ch == 'j' || ch == KEY_DOWN) {
         selected += move_count;
-        if (selected >= file_count) selected = file_count - 1;
+        if (selected >= file_count)
+          selected = file_count - 1;
         continue;
       } else if (ch == 'k' || ch == KEY_UP) {
         selected -= move_count;
-        if (selected < 0) selected = 0;
+        if (selected < 0)
+          selected = 0;
         continue;
       }
 
     } else {
       switch (ch) {
-        case k_quit:
-          __EXIT;
-          return 0;
-          break;
+      case k_quit:
+        __EXIT;
+        return 0;
+        break;
 
-        case k_back:
-        case KEY_LEFT:
-          __BACK;
-          break;
+      case k_back:
+      case KEY_LEFT:
+        __BACK;
+        break;
 
-        case k_up:
-        case KEY_UP:
-          __SCROLL_UP;
-          break;
+      case k_up:
+      case KEY_UP:
+        __SCROLL_UP;
+        break;
 
-        case klong_up:
-          if (selected > 0) {
-            selected -= 10;
-          }
-          if (selected < 0) selected = 0;
-          break;
+      case klong_up:
+        if (selected > 0) {
+          selected -= 10;
+        }
+        if (selected < 0)
+          selected = 0;
+        break;
 
-        case k_down:
-        case KEY_DOWN:
-          __SCROLL_DOWN;
-          break;
+      case k_down:
+      case KEY_DOWN:
+        __SCROLL_DOWN;
+        break;
 
-        case klong_down:
-          if (selected < file_count - 1) {
-            selected += 10;
-          }
-          if (selected >= file_count) selected = file_count - 1;
-          break;
+      case klong_down:
+        if (selected < file_count - 1) {
+          selected += 10;
+        }
+        if (selected >= file_count)
+          selected = file_count - 1;
+        break;
 
-        case k_tolast:
-          __LAST_FILE;
-          break;
+      case k_tolast:
+        __LAST_FILE;
+        break;
 
-        case k_goto:
-          __GOTO;
-          break;
+      case k_goto:
+        __GOTO;
+        break;
 
-        case k_dot:
-        case CONTROL('H'):
-          __HIDDEN_FILES;
-          break;
+      case k_dot:
+      case CONTROL('H'):
+        __HIDDEN_FILES;
+        break;
 
-        case k_enter:
-        case k_forw:
-        case KEY_RIGHT:
-          __TO_FRWD;
-          break;
+      case k_enter:
+      case k_forw:
+      case KEY_RIGHT:
+        __TO_FRWD;
+        break;
 
-        case k_mark:
-          __MARK_FILE;
-          break;
-        case k_delete:
-        case k_dc:
-          __DELETE;
-          break;
+      case k_mark:
+        __MARK_FILE;
+        break;
+      case k_delete:
+      case k_dc:
+        __DELETE;
+        break;
 
-        case k_mkdir:
-          __MAKE_DIR;
-          break;
+      case k_mkdir:
+        __MAKE_DIR;
+        break;
 
-        case k_prev:
-          __TO_PREV;
-          break;
+      case k_prev:
+        __TO_PREV;
+        break;
 
-        case k_mkfile:
-          __MAKE_FILE;
-          break;
+      case k_mkfile:
+        __MAKE_FILE;
+        break;
 
-        case k_rename:
-          __RENAME;
-          break;
+      case k_rename:
+        __RENAME;
+        break;
 
-        case CONTROL('o'):
-        case k_openwith:
-          __OPEN_WITH;
-          break;
+      case CONTROL('o'):
+      case k_openwith:
+        __OPEN_WITH;
+        break;
 
-        case k_markfmenu:
-          __MARK_FILES_MENU;
-          break;
+      case k_markfmenu:
+        __MARK_FILES_MENU;
+        break;
 
-        case k_markmhandle:
-          __HANDLE_MARKED_FILES;
-          break;
+      case k_markmhandle:
+        __HANDLE_MARKED_FILES;
+        break;
 
-        case PAGE_UP:
-        case CONTROL('U'):
+      case PAGE_UP:
+      case CONTROL('U'):
 
-          __PGUP_HANDLE;
-          break;
-        case PAGE_DOWN:
-        case CONTROL('D'):
+        __PGUP_HANDLE;
+        break;
+      case PAGE_DOWN:
+      case CONTROL('D'):
 
-          __PGDN_HANDLE;
-          break;
+        __PGDN_HANDLE;
+        break;
 
-        case k_update:
-          __UPDATE__;
-          break;
+      case k_update:
+        __UPDATE__;
+        break;
 
-        case TAB:
-          __TAB_HANDLE;
-          break;
+      case TAB:
+        __TAB_HANDLE;
+        break;
 
-        case k_yarn:
-          __COPY;
-          break;
+      case k_yarn:
+        __COPY;
+        break;
 
-        case k_cut:
-          __CUT;
-          break;
+      case k_cut:
+        __CUT;
+        break;
 
-        case k_paste:
-          __PASTE;
-          break;
+      case k_paste:
+        __PASTE;
+        break;
 
-        case k_search:
-          __SEARCH;
-          break;
+      case k_search:
+        __SEARCH;
+        break;
 
-        case k_cmdl:
-          __VI;
-          break;
+      case k_cmdl:
+        __VI;
+        break;
 
-          if (RK) {
-            case k_rk:
-              line_clear(LINES - 1);
-              mvwprintw(stdscr, LINES - 1, 0, "reset 'b'uffer | 't'erminal");
-              ch = getch();
-              if (ch == 'b') {
-                cp_buff_count = 0;
-                line_clear(LINES - 1);
-                mvwprintw(stdscr, LINES - 1, 0, "reset copy buffer");
-                gtimeout(500);
-              } else if (ch == 't') {
-                reset_terminal(0);
-                list(path, NULL, false, false);
-                line_clear(LINES - 1);
-                mvwprintw(stdscr, LINES - 1, 0, "terminal reset");
-                gtimeout(500);
-                break;
-              }
-          }
-        case k_showpath:
+        if (RK) {
+        case k_rk:
           line_clear(LINES - 1);
-          mvwprintw(stdscr, LINES - 1, 0, path);
-          gtimeout(2000);
-          break;
+          mvwprintw(stdscr, LINES - 1, 0, "reset 'b'uffer | 't'erminal");
+          ch = getch();
+          if (ch == 'b') {
+            cp_buff_count = 0;
+            line_clear(LINES - 1);
+            mvwprintw(stdscr, LINES - 1, 0, "reset copy buffer");
+            gtimeout(500);
+          } else if (ch == 't') {
+            reset_terminal(0);
+            list(path, NULL, false, false);
+            line_clear(LINES - 1);
+            mvwprintw(stdscr, LINES - 1, 0, "terminal reset");
+            gtimeout(500);
+            break;
+          }
+        }
+      case k_showpath:
+        line_clear(LINES - 1);
+        mvwprintw(stdscr, LINES - 1, 0, path);
+        gtimeout(2000);
+        break;
 
-          //       case 'a':
-          //         list(path, NULL, false, true); Пока тесты
-          //         break;
+        //       case 'a':
+        //         list(path, NULL, false, true); Пока тесты
+        //         break;
 
-        case k_Nsearch:
-          search_UP();
-          break;
-        case k_nsearch:
-          search_DN();
-          break;
+      case k_Nsearch:
+        search_UP();
+        break;
+      case k_nsearch:
+        search_DN();
+        break;
       }
     }
   }

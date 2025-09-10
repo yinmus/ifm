@@ -23,7 +23,8 @@ static char *color_pairs[MAX_COLORS] = {0};
 static int next_color_pair = 20;
 
 int get_hex(const char *hex_color) {
-  if (!hex_color) return 0;
+  if (!hex_color)
+    return 0;
 
   for (int i = 0; i < next_color_pair; i++) {
     if (color_pairs[i] && !strcmp(color_pairs[i], hex_color)) {
@@ -31,11 +32,13 @@ int get_hex(const char *hex_color) {
     }
   }
 
-  if (next_color_pair >= MAX_COLORS) return 0;
+  if (next_color_pair >= MAX_COLORS)
+    return 0;
 
   const char *hex = (hex_color[0] == '#') ? hex_color + 1 : hex_color;
   int r, g, b;
-  if (sscanf(hex, "%02x%02x%02x", &r, &g, &b) != 3) return 0;
+  if (sscanf(hex, "%02x%02x%02x", &r, &g, &b) != 3)
+    return 0;
 
   init_color(next_color_pair + 8, r * 1000 / 255, g * 1000 / 255,
              b * 1000 / 255);
@@ -47,7 +50,8 @@ int get_hex(const char *hex_color) {
 
 void shorten_path(char *dest, const char *src, int max_width) {
   if (!dest || !src || max_width <= 0) {
-    if (dest) *dest = '\0';
+    if (dest)
+      *dest = '\0';
     return;
   }
 
@@ -98,7 +102,8 @@ void shorten_path(char *dest, const char *src, int max_width) {
   }
 
   for (int i = 0; i < component_count - 1; i++) {
-    if (remaining < 3) break;
+    if (remaining < 3)
+      break;
     strncat(shortened, components[i], 1);
     strcat(shortened, "/");
     remaining -= 2;
@@ -278,7 +283,8 @@ void Display() {
 
   int height = LINES - 4;
   int scroll_margin = height / 10;
-  if (scroll_margin < 2) scroll_margin = 2;
+  if (scroll_margin < 2)
+    scroll_margin = 2;
 
   if (selected < offset) {
     offset = selected;
@@ -286,7 +292,8 @@ void Display() {
     offset = selected - height + 1;
   } else if (selected < offset + scroll_margin) {
     offset = selected - scroll_margin;
-    if (offset < 0) offset = 0;
+    if (offset < 0)
+      offset = 0;
   } else if (selected >= offset + height - scroll_margin) {
     offset = selected - height + scroll_margin + 1;
   }
@@ -299,7 +306,8 @@ void Display() {
   }
 
   int max_name_width = COLS - 10;
-  if (max_name_width < 10) max_name_width = 10;
+  if (max_name_width < 10)
+    max_name_width = 10;
 
   for (int i = 0; i < height && i + offset < file_count; i++) {
     char item_path[MAX_PATH];
@@ -352,7 +360,8 @@ void Display() {
     int icon_color = color;
     if (icon.color) {
       icon_color = get_hex(icon.color);
-      if (!icon_color) icon_color = color;
+      if (!icon_color)
+        icon_color = color;
     }
 
     if (is_marked) {
@@ -381,18 +390,21 @@ void Display() {
       display_name[max_name_width] = '\0';
     }
 
-    if (i + offset == selected) attron(A_REVERSE);
+    if (i + offset == selected)
+      attron(A_REVERSE);
     attron(COLOR_PAIR(color) | A_NORMAL);
     mvprintw(i + 2, 3, "%-*s", max_name_width, display_name);
     attroff(COLOR_PAIR(color) | A_NORMAL);
-    if (i + offset == selected) attroff(A_REVERSE);
+    if (i + offset == selected)
+      attroff(A_REVERSE);
   }
 
   if (file_count > height) {
     int scrollbar_height = height;
     int scrollbar_pos = (height * offset) / file_count;
     int scrollbar_end = (height * (offset + height)) / file_count;
-    if (scrollbar_end >= height) scrollbar_end = height - 1;
+    if (scrollbar_end >= height)
+      scrollbar_end = height - 1;
   }
 
   if (file_count > 0 && selected >= 0 && selected < file_count) {

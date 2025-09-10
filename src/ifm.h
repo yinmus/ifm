@@ -39,10 +39,10 @@ extern int sd;
 
 #ifndef MOUSE_BTNS
 
-#define LMB BUTTON1_PRESSED  // LEFT MOUSE BUTTON
-#define RMB BUTTON3_PRESSED  // RIGHT MOUSE BUTTON
-#define MWU BUTTON4_PRESSED  // MOUSE WHEEL UP
-#define MWD BUTTON5_PRESSED  // MOUSE WHEEL DOWN
+#define LMB BUTTON1_PRESSED // LEFT MOUSE BUTTON
+#define RMB BUTTON3_PRESSED // RIGHT MOUSE BUTTON
+#define MWU BUTTON4_PRESSED // MOUSE WHEEL UP
+#define MWD BUTTON5_PRESSED // MOUSE WHEEL DOWN
 
 #endif
 
@@ -75,40 +75,40 @@ void vi();
 void search_UP();
 void search_DN();
 
-#define DIRT(path)                                                    \
-  ({                                                                  \
-    struct stat _statbuf;                                             \
-    int _result = 0;                                                  \
-    if (lstat((path), &_statbuf) == 0 && S_ISDIR(_statbuf.st_mode)) { \
-      _result = (access((path), R_OK | X_OK) == 0);                   \
-    }                                                                 \
-    _result;                                                          \
+#define DIRT(path)                                                             \
+  ({                                                                           \
+    struct stat _statbuf;                                                      \
+    int _result = 0;                                                           \
+    if (lstat((path), &_statbuf) == 0 && S_ISDIR(_statbuf.st_mode)) {          \
+      _result = (access((path), R_OK | X_OK) == 0);                            \
+    }                                                                          \
+    _result;                                                                   \
   })
 
-#define CASE_INSENSITIVE_STRSTR(haystack, needle) \
-  ({                                              \
-    int _found = 0;                               \
-    if ((haystack) != NULL && (needle) != NULL) { \
-      const char *_h = (haystack);                \
-      while (*_h && !_found) {                    \
-        const char *_h_ptr = _h;                  \
-        const char *_n_ptr = (needle);            \
-        while (tolower((unsigned char)*_h_ptr) == \
-               tolower((unsigned char)*_n_ptr)) { \
-          _h_ptr++;                               \
-          _n_ptr++;                               \
-          if (*_n_ptr == '\0') {                  \
-            _found = 1;                           \
-            break;                                \
-          }                                       \
-          if (*_h_ptr == '\0') {                  \
-            break;                                \
-          }                                       \
-        }                                         \
-        _h++;                                     \
-      }                                           \
-    }                                             \
-    _found;                                       \
+#define CASE_INSENSITIVE_STRSTR(haystack, needle)                              \
+  ({                                                                           \
+    int _found = 0;                                                            \
+    if ((haystack) != NULL && (needle) != NULL) {                              \
+      const char *_h = (haystack);                                             \
+      while (*_h && !_found) {                                                 \
+        const char *_h_ptr = _h;                                               \
+        const char *_n_ptr = (needle);                                         \
+        while (tolower((unsigned char)*_h_ptr) ==                              \
+               tolower((unsigned char)*_n_ptr)) {                              \
+          _h_ptr++;                                                            \
+          _n_ptr++;                                                            \
+          if (*_n_ptr == '\0') {                                               \
+            _found = 1;                                                        \
+            break;                                                             \
+          }                                                                    \
+          if (*_h_ptr == '\0') {                                               \
+            break;                                                             \
+          }                                                                    \
+        }                                                                      \
+        _h++;                                                                  \
+      }                                                                        \
+    }                                                                          \
+    _found;                                                                    \
   })
 
 #ifndef HANDLES

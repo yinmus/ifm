@@ -77,19 +77,23 @@ void list(const char *dir_path, const char *filter, bool show_dirs,
     if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
       continue;
 
-    if (!s_hidden && entry->d_name[0] == '.') continue;
+    if (!s_hidden && entry->d_name[0] == '.')
+      continue;
 
     char full_path[MAX_PATH];
     snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
 
     struct stat st;
-    if (stat(full_path, &st) != 0) continue;
+    if (stat(full_path, &st) != 0)
+      continue;
 
     bool is_dir = S_ISDIR(st.st_mode);
 
     if (!show_all) {
-      if (show_dirs && !is_dir) continue;
-      if (show_files && is_dir) continue;
+      if (show_dirs && !is_dir)
+        continue;
+      if (show_files && is_dir)
+        continue;
     }
 
     if (filter != NULL && !CASE_INSENSITIVE_STRSTR(entry->d_name, filter)) {
@@ -312,7 +316,8 @@ void cr_file() {
       gtimeout(500);
       return;
     }
-    if (file) fclose(file);
+    if (file)
+      fclose(file);
 
     list(path, NULL, false, false);
     ;
@@ -457,7 +462,8 @@ void open_with(const char *filename) {
   int ch;
   while ((ch = getch()) != '\n' && ch != KEY_ENTER && ch != ESC) {
     if (ch == KEY_BACKSPACE || ch == 127) {
-      if (pos > 0) command[--pos] = '\0';
+      if (pos > 0)
+        command[--pos] = '\0';
     } else if (pos < MAX_PATH - 1) {
       command[pos++] = ch;
     }
@@ -546,7 +552,8 @@ void to_back() {
   if (offset > file_count - height) {
     offset = file_count - height;
   }
-  if (offset < 0) offset = 0;
+  if (offset < 0)
+    offset = 0;
 }
 
 void to_home() {
@@ -692,7 +699,8 @@ int confrim_delete(const char *filename) {
 }
 
 void resolve_path(const char *input, char *output, size_t size) {
-  if (!input || !output || size == 0) return;
+  if (!input || !output || size == 0)
+    return;
 
   if (input[0] == '/') {
     strncpy(output, input, size - 1);
@@ -726,7 +734,8 @@ void search() {
               strcmp(entry->d_name, "..") == 0)
             continue;
 
-          if (!s_hidden && entry->d_name[0] == '.') continue;
+          if (!s_hidden && entry->d_name[0] == '.')
+            continue;
 
           if (CASE_INSENSITIVE_STRSTR(entry->d_name, filter)) {
             strncpy(search_results[search_count++], entry->d_name, MAX_PATH);
@@ -756,7 +765,8 @@ void search() {
 }
 
 void search_DN() {
-  if (search_count == 0) return;
+  if (search_count == 0)
+    return;
 
   search_index++;
   if (search_index >= search_count) {
@@ -781,7 +791,8 @@ void search_DN() {
 }
 
 void search_UP() {
-  if (search_count == 0) return;
+  if (search_count == 0)
+    return;
 
   search_index--;
   if (search_index < 0) {
@@ -828,78 +839,78 @@ void handle_archive(const char *filename) {
 
   int ch = getch();
   switch (tolower(ch)) {
-    case 'l': {
-      char cmd[MAX_PATH * 3];
-      snprintf(cmd, sizeof(cmd), "ifm-ar -t \"%s\" > \"%s\" 2>&1", full_path,
-               tmp_path);
-      system(cmd);
+  case 'l': {
+    char cmd[MAX_PATH * 3];
+    snprintf(cmd, sizeof(cmd), "ifm-ar -t \"%s\" > \"%s\" 2>&1", full_path,
+             tmp_path);
+    system(cmd);
 
-      def_prog_mode();
-      endwin();
+    def_prog_mode();
+    endwin();
 
-      char less_cmd[MAX_PATH + 10];
-      snprintf(less_cmd, sizeof(less_cmd), "less -r \"%s\"", tmp_path);
-      system(less_cmd);
+    char less_cmd[MAX_PATH + 10];
+    snprintf(less_cmd, sizeof(less_cmd), "less -r \"%s\"", tmp_path);
+    system(less_cmd);
 
-      unlink(tmp_path);
-      reset_prog_mode();
-      refresh();
-      break;
-    }
-    case 'x': {
-      char extract_path[MAX_PATH];
-      strcpy(extract_path, path);
+    unlink(tmp_path);
+    reset_prog_mode();
+    refresh();
+    break;
+  }
+  case 'x': {
+    char extract_path[MAX_PATH];
+    strcpy(extract_path, path);
 
-      if (cpe(extract_path, sizeof(extract_path), "path: ")) {
-        if (strlen(extract_path) > 0) {
-          char *p = extract_path;
-          while (*p != '\0') {
-            if (*p == '/') {
-              *p = '\0';
-              mkdir(extract_path, 0755);
-              *p = '/';
-            }
-            p++;
+    if (cpe(extract_path, sizeof(extract_path), "path: ")) {
+      if (strlen(extract_path) > 0) {
+        char *p = extract_path;
+        while (*p != '\0') {
+          if (*p == '/') {
+            *p = '\0';
+            mkdir(extract_path, 0755);
+            *p = '/';
           }
-          mkdir(extract_path, 0755);
-        } else {
-          strcpy(extract_path, path);
+          p++;
         }
+        mkdir(extract_path, 0755);
       } else {
-        unlink(tmp_path);
-        return;
+        strcpy(extract_path, path);
       }
+    } else {
+      unlink(tmp_path);
+      return;
+    }
 
-      char cmd[MAX_PATH * 3];
-      snprintf(cmd, sizeof(cmd), "ifm-ar -x \"%s\" -o \"%s\"", full_path,
-               extract_path);
+    char cmd[MAX_PATH * 3];
+    snprintf(cmd, sizeof(cmd), "ifm-ar -x \"%s\" -o \"%s\"", full_path,
+             extract_path);
+    list(path, NULL, false, false);
+    ;
+    refresh();
+
+    int result = system(cmd);
+
+    move(LINES - 1, 0);
+    clrtoeol();
+    if (result == 0) {
+      mvprintw(LINES - 1, 0, "Extracted to: %s", extract_path);
       list(path, NULL, false, false);
       ;
       refresh();
-
-      int result = system(cmd);
-
-      move(LINES - 1, 0);
-      clrtoeol();
-      if (result == 0) {
-        mvprintw(LINES - 1, 0, "Extracted to: %s", extract_path);
-        list(path, NULL, false, false);
-        ;
-        refresh();
-        gtimeout(300);
-      } else {
-        mvprintw(LINES - 1, 0, "E extracting to: %s", extract_path);
-        refresh();
-        gtimeout(500);
-        list(path, NULL, false, false);
-        ;
-      }
+      gtimeout(300);
+    } else {
+      mvprintw(LINES - 1, 0, "E extracting to: %s", extract_path);
       refresh();
-      break;
+      gtimeout(500);
+      list(path, NULL, false, false);
+      ;
     }
-    case 'c':
-    default:
-      break;
+    refresh();
+    break;
+  }
+  case 'c':
+  default:
+    break;
   }
 
   move(LINES - 1, 0);
@@ -975,7 +986,8 @@ void vi() {
 
       if (strlen(cmd) > 1) {
         step = atoi(cmd + 1);
-        if (step <= 0) step = 1;
+        if (step <= 0)
+          step = 1;
       }
 
       if (cmd[0] == '+') {
@@ -995,7 +1007,8 @@ void vi() {
       if (offset > file_count - height) {
         offset = file_count - height;
       }
-      if (offset < 0) offset = 0;
+      if (offset < 0)
+        offset = 0;
 
       return;
     }
@@ -1013,7 +1026,8 @@ void vi() {
         if (offset > file_count - height) {
           offset = file_count - height;
         }
-        if (offset < 0) offset = 0;
+        if (offset < 0)
+          offset = 0;
         return;
       }
     }
@@ -1128,12 +1142,13 @@ void __to_frwd() {
     offset = 0;
   } else {
     const char *ext = strrchr(files[selected], '.');
-    if (ext && (strcasecmp(ext, ".zip") == 0          || strcasecmp(ext, ".tar") == 0 ||
-                strcasecmp(ext, ".gz") == 0           || strcasecmp(ext, ".bz2") == 0 ||
-                strcasecmp(ext, ".xz") == 0           || strcasecmp(ext, ".rar") == 0 ||
-                strcasecmp(ext, ".7z") == 0           || strcasecmp(ext, ".ar") == 0 ||
-                strcasecmp(ext, ".lz") == 0           ||  strcasecmp(ext, ".bz") == 0 ||
-                strcasecmp(ext, ".pkg.tar.zst") == 0) || strcasecmp(ext, ".tar.gz") == 0) {
+    if (ext && (strcasecmp(ext, ".zip") == 0 || strcasecmp(ext, ".tar") == 0 ||
+                strcasecmp(ext, ".gz") == 0 || strcasecmp(ext, ".bz2") == 0 ||
+                strcasecmp(ext, ".xz") == 0 || strcasecmp(ext, ".rar") == 0 ||
+                strcasecmp(ext, ".7z") == 0 || strcasecmp(ext, ".ar") == 0 ||
+                strcasecmp(ext, ".lz") == 0 || strcasecmp(ext, ".bz") == 0 ||
+                strcasecmp(ext, ".pkg.tar.zst") == 0) ||
+        strcasecmp(ext, ".tar.gz") == 0) {
       handle_archive(files[selected]);
     } else {
       open_file(files[selected]);
@@ -1188,7 +1203,8 @@ void __mark_file() {
 void __delete() {
   int any_marked = 0;
   for (int i = 0; i < MAX_FILES; i++) {
-    if (marked_files[i].marked) any_marked = 1;
+    if (marked_files[i].marked)
+      any_marked = 1;
   }
 
   if (any_marked) {
@@ -1232,12 +1248,14 @@ void __rename() { ren(files[selected]); }
 
 void __PG_scrl_up() {
   selected -= (LINES - 4) / 2;
-  if (selected < 0) selected = 0;
+  if (selected < 0)
+    selected = 0;
 }
 
 void __PG_scrl_dn() {
   selected += (LINES - 4) / 2;
-  if (selected >= file_count) selected = file_count - 1;
+  if (selected >= file_count)
+    selected = file_count - 1;
 }
 
 void __tab_handle() {
@@ -1294,46 +1312,46 @@ void __cut() {
 
   if (ch != ERR) {
     switch (ch) {
-      case 'x':
-        if (access(full_path, F_OK) != 0) {
+    case 'x':
+      if (access(full_path, F_OK) != 0) {
+        line_clear(LINES - 1);
+        mvprintw(LINES - 1, 0, "[E:01] File not found");
+        refresh();
+        gtimeout(800);
+        return;
+      }
+
+      for (int i = 0; i < cp_buff_count; i++) {
+        if (strcmp(cp_buff[i], full_path) == 0) {
           line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:01] File not found");
+          mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
           refresh();
           gtimeout(800);
           return;
         }
+      }
 
-        for (int i = 0; i < cp_buff_count; i++) {
-          if (strcmp(cp_buff[i], full_path) == 0) {
-            line_clear(LINES - 1);
-            mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
-            refresh();
-            gtimeout(800);
-            return;
-          }
-        }
-
-        if (cp_buff_count >= MAX_COPY_FILES) {
-          line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
-          refresh();
-          gtimeout(500);
-          return;
-        }
-
-        strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
-
-        cp_buff_ct[cp_buff_count] = true;
-        cp_buff_count++;
-
+      if (cp_buff_count >= MAX_COPY_FILES) {
         line_clear(LINES - 1);
-        mvprintw(LINES - 1, 0, "'%s' cut", files[selected]);
+        mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
         refresh();
         gtimeout(500);
-        break;
+        return;
+      }
 
-      default:
-        break;
+      strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
+
+      cp_buff_ct[cp_buff_count] = true;
+      cp_buff_count++;
+
+      line_clear(LINES - 1);
+      mvprintw(LINES - 1, 0, "'%s' cut", files[selected]);
+      refresh();
+      gtimeout(500);
+      break;
+
+    default:
+      break;
     }
   }
 }
@@ -1378,44 +1396,44 @@ void __copy() {
 
   if (ch != ERR) {
     switch (ch) {
-      case 'y':
-        if (access(full_path, F_OK) != 0) {
+    case 'y':
+      if (access(full_path, F_OK) != 0) {
+        line_clear(LINES - 1);
+        mvprintw(LINES - 1, 0, "[E:01] File not found");
+        refresh();
+        gtimeout(800);
+        return;
+      }
+
+      for (int i = 0; i < cp_buff_count; i++) {
+        if (strcmp(cp_buff[i], full_path) == 0) {
           line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:01] File not found");
+          mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
           refresh();
           gtimeout(800);
           return;
         }
+      }
 
-        for (int i = 0; i < cp_buff_count; i++) {
-          if (strcmp(cp_buff[i], full_path) == 0) {
-            line_clear(LINES - 1);
-            mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
-            refresh();
-            gtimeout(800);
-            return;
-          }
-        }
-
-        if (cp_buff_count >= MAX_COPY_FILES) {
-          line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
-          refresh();
-          gtimeout(500);
-          return;
-        }
-
-        strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
-        cp_buff_count++;
-
+      if (cp_buff_count >= MAX_COPY_FILES) {
         line_clear(LINES - 1);
-        mvprintw(LINES - 1, 0, "'%s' copied", files[selected]);
+        mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
         refresh();
         gtimeout(500);
-        break;
+        return;
+      }
 
-      default:
-        break;
+      strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
+      cp_buff_count++;
+
+      line_clear(LINES - 1);
+      mvprintw(LINES - 1, 0, "'%s' copied", files[selected]);
+      refresh();
+      gtimeout(500);
+      break;
+
+    default:
+      break;
     }
     {
     }

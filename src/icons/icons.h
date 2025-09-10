@@ -2,9 +2,9 @@
 #ifndef ICONS_H
 #define ICONS_H
 
-#include <string.h>
 #include "icons_extension.h"
 #include "icons_filename.h"
+#include <string.h>
 
 typedef struct {
   const char *icon;

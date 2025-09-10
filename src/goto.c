@@ -10,70 +10,70 @@ void goto_cmd(int next_char) {
   char target_path[MAX_PATH];
 
   switch (next_char) {
-    case '/':
+  case '/':
+    strcpy(target_path, "/");
+    break;
+  case 'e':
+    strcpy(target_path, "/etc/");
+    break;
+  case 'm': {
+    if (access("/media", F_OK) == 0) {
+      strcpy(target_path, "/media/");
+    } else if (access("/run/media", F_OK) == 0) {
+      strcpy(target_path, "/run/media/");
+    } else {
       strcpy(target_path, "/");
-      break;
-    case 'e':
-      strcpy(target_path, "/etc/");
-      break;
-    case 'm': {
-      if (access("/media", F_OK) == 0) {
-        strcpy(target_path, "/media/");
-      } else if (access("/run/media", F_OK) == 0) {
-        strcpy(target_path, "/run/media/");
-      } else {
-        strcpy(target_path, "/");
-      }
-      break;
     }
-    case 'd':
-      strcpy(target_path, "/dev/");
-      break;
-    case 'M':
-      strcpy(target_path, "/mnt/");
-      break;
-    case 't':
-      strcpy(target_path, "/tmp/");
-      break;
-    case 'v':
-      strcpy(target_path, "/var/");
-      break;
-    case 's':
-      strcpy(target_path, "/srv/");
-      break;
-    case '?':
+    break;
+  }
+  case 'd':
+    strcpy(target_path, "/dev/");
+    break;
+  case 'M':
+    strcpy(target_path, "/mnt/");
+    break;
+  case 't':
+    strcpy(target_path, "/tmp/");
+    break;
+  case 'v':
+    strcpy(target_path, "/var/");
+    break;
+  case 's':
+    strcpy(target_path, "/srv/");
+    break;
+  case '?':
 
-      strcpy(target_path, "/usr/share/doc/ifm/");
-      break;
-    case 'o':
+    strcpy(target_path, "/usr/share/doc/ifm/");
+    break;
+  case 'o':
 
-      strcpy(target_path, "/opt/");
-      break;
+    strcpy(target_path, "/opt/");
+    break;
 
-    case 'r':
-      strcpy(target_path, "/run/");
-      break;
+  case 'r':
+    strcpy(target_path, "/run/");
+    break;
 
-    case 'c':
-      strcpy(target_path, "/sys/");
-      break;
+  case 'c':
+    strcpy(target_path, "/sys/");
+    break;
 
-    case 'G':
-      selected = file_count - 1;
-      break;
-    case 'g':
-      selected = 0;
-      break;
-    case 'u':
+  case 'G':
+    selected = file_count - 1;
+    break;
+  case 'g':
+    selected = 0;
+    break;
+  case 'u':
 
-      strcpy(target_path, "/usr/");
-      break;
-    case 'h':
+    strcpy(target_path, "/usr/");
+    break;
+  case 'h':
 
-      to_home();
-      return;
-    default:
-      return;
+    to_home();
+    return;
+  default:
+    return;
   }
 
   if (chdir(target_path) == 0) {
