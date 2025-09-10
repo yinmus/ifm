@@ -19,7 +19,7 @@
 /*kb*/
 
 
-#define k_quit 113         // key q 
+#define k_quit 113         // key q
 #define k_back 104         // key h
 #define k_down 106         // key j
 #define k_up 107           // key k
