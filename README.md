@@ -8,18 +8,14 @@
 
 ____
 
+<p>
+<H3>Beautiful interface with icons for many file extensions. To display icons, you need to set up a font, for example, Noto Fonts or another (icons can be disabled)</H3>
+</p>
 
-<h3>
-  Minimal interface with file extension icons  
-  <small>(requires proper font; icons optional)</small>
-</h3>
-
-
-***need noto fonts to icons**
 ___
 
 <p>
-  <H3> Ability to label files for faster file management </H3>
+  <H3> Ability to label files for faster file management </H3>  
 </p>
 
 ___
@@ -31,24 +27,12 @@ ifm-ar "built-in" archiver, which can be used in a narrow way outside the file m
 </p>
 ___
 
-
-### Installation:
-
-Download the latest [release](https://github.com/yinmus/ifm/releases/)
-Execute the commands according to the release instructions
-
-
-
-
 ### Manual assembly:
 
 (Clone repo)
 
 ```
-make install
-```
-```
-make uninstall
+make clean install
 ```
 ____
 
