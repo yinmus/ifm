@@ -8,9 +8,6 @@
 
 ____
 
-Examples of work, image of file manager
-
-
 
 <h3>
   Minimal interface with file extension icons  
@@ -24,8 +21,6 @@ ___
 <p>
   <H3> Ability to label files for faster file management </H3>
 </p>
-
-___
 
 ___
 
