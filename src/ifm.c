@@ -285,9 +285,9 @@ void open_file(const char *filename) {
 
   magic_close(magic);
   list(path, NULL, false, false);
-  ;
   reset_terminal(0);
 }
+
 void cr_file() {
   char filename[MAX_NAME] = {0};
   if (cpe(filename, MAX_NAME, "[path]/file name: ")) {
@@ -1119,42 +1119,47 @@ void __to_prev() {
   offset = 0;
 }
 
+
 void __to_frwd() {
-  char full_path[MAX_PATH];
+    char full_path[MAX_PATH];
 
-  snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
+    snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
 
-  if (DIRT(full_path)) {
-    strncpy(lpath, path, sizeof(lpath));
+    struct stat st;
+    if (lstat(full_path, &st) == 0) {
+        if (S_ISDIR(st.st_mode) || (S_ISLNK(st.st_mode) && stat(full_path, &st) == 0 && S_ISDIR(st.st_mode))) {
+            strncpy(lpath, path, sizeof(lpath));
 
-    strncpy(lpath, path, sizeof(lpath));
-    if (chdir(full_path) != 0) {
-      line_clear(LINES - 1);
-      mvprintw(LINES - 1, 0, "E: Cannot access directory");
-      refresh();
-      gtimeout(500);
-      return;
+            if (chdir(full_path) != 0) {
+                line_clear(LINES - 1);
+                mvprintw(LINES - 1, 0, "E: Cannot access directory");
+                refresh();
+                gtimeout(500);
+                return;
+            }
+
+            getcwd(path, sizeof(path));
+            list(path, NULL, false, false);
+            selected = 0;
+            offset = 0;
+            return;
+        }
     }
-    getcwd(path, sizeof(path));
-    list(path, NULL, false, false);
-    ;
-    selected = 0;
-    offset = 0;
-  } else {
+
     const char *ext = strrchr(files[selected], '.');
-    if (ext && (strcasecmp(ext, ".zip") == 0 || strcasecmp(ext, ".tar") == 0 ||
-                strcasecmp(ext, ".gz") == 0 || strcasecmp(ext, ".bz2") == 0 ||
-                strcasecmp(ext, ".xz") == 0 || strcasecmp(ext, ".rar") == 0 ||
-                strcasecmp(ext, ".7z") == 0 || strcasecmp(ext, ".ar") == 0 ||
-                strcasecmp(ext, ".lz") == 0 || strcasecmp(ext, ".bz") == 0 ||
-                strcasecmp(ext, ".pkg.tar.zst") == 0) ||
-        strcasecmp(ext, ".tar.gz") == 0) {
-      handle_archive(files[selected]);
+    if (ext && (strcasecmp(ext, ".zip")         == 0    || strcasecmp(ext, ".tar") == 0 ||
+                strcasecmp(ext, ".gz")          == 0    || strcasecmp(ext, ".bz2") == 0 ||
+                strcasecmp(ext, ".xz")          == 0    || strcasecmp(ext, ".rar") == 0 ||
+                strcasecmp(ext, ".7z")          == 0    || strcasecmp(ext, ".ar") == 0  ||
+                strcasecmp(ext, ".lz")          == 0    || strcasecmp(ext, ".bz") == 0  ||
+                strcasecmp(ext, ".pkg.tar.zst") == 0    || strcasecmp(ext, ".tgz") == 0 ||
+                strcasecmp(ext, ".tar.gz") == 0)) {
+        handle_archive(files[selected]);
     } else {
-      open_file(files[selected]);
+        open_file(files[selected]);
     }
-  }
 }
+
 
 void __mark_file() {
   assert(selected >= 0 && selected < file_count && "Invalid selected index");

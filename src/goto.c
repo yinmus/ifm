@@ -62,8 +62,23 @@ void goto_cmd(int next_char) {
     selected = file_count - 1;
     break;
   case 'g':
-    selected = 0;
-    break;
+      int num = 0;
+      if (num >= 0) {
+        if (num < file_count) {
+          selected = num;
+        } else {
+          selected = file_count - 1;
+        }
+        int height = LINES - 4;
+        offset = (selected > height / 2) ? selected - height / 2 : 0;
+        if (offset > file_count - height) {
+          offset = file_count - height;
+        }
+        if (offset < 0)
+          offset = 0;
+        return;
+      }
+
   case 'u':
 
     strcpy(target_path, "/usr/");
