@@ -4,6 +4,9 @@
 
 <div align="center">
 <H1>IFM - light, easy text file manager</H1>
+<a href="https://github.com/yinmus/ifm/">
+<img src="ifm-logo.png" width="750">
+</a>
 </div>
 
 ____
@@ -12,17 +15,18 @@ Examples of work, image of file manager
 
 
 
-<h3>
-  Minimal interface with file extension icons  
-  <small>(requires proper font; icons optional)</small>
-</h3>
-
+<p>
+<H3>Beautiful interface with icons for many file extensions. The font must be set for the correct display of icons (icons can be disabled)</H3>
+<img src="https://github.com/yinmus/a/blob/main/p1.png" width="78%" /> 
+</p>
 
 ***need noto fonts to icons**
 ___
 
 <p>
   <H3> Ability to label files for faster file management </H3>
+ <img src="https://github.com/yinmus/a/blob/main/p2.png" width="50%" />
+  
 </p>
 
 ___

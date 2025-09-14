@@ -10,7 +10,9 @@
 
 #include "ifm.h"
 
-void reference() {
+void
+reference()
+{
   printf("IFM - Lightweight File Manager\n");
   printf("Usage: ifm [PATH] OPTION] \n\n");
   printf("Options:\n");
@@ -20,7 +22,9 @@ void reference() {
   printf("\n\nVersion: %s\n\n", IFM_VERSION);
 }
 
-void Version() {
+void
+Version()
+{
   printf("ifm %s\n\n", IFM_VERSION);
   printf("Copyright (c) 2025 YINMUS-IFM\n");
   printf("Released under the MIT License.\n\n");
@@ -28,9 +32,11 @@ void Version() {
   printf("Please report bugs: <https://github.com/yinmus/ifm/issues>\n");
 }
 
-int compare(const void *a, const void *b) {
-  const char *name_a = (const char *)a;
-  const char *name_b = (const char *)b;
+int
+compare(const void* a, const void* b)
+{
+  const char* name_a = (const char*)a;
+  const char* name_b = (const char*)b;
 
   char path_a[MAX_PATH], path_b[MAX_PATH];
   snprintf(path_a, sizeof(path_a), "%s/%s", path, name_a);
@@ -46,7 +52,9 @@ int compare(const void *a, const void *b) {
   return is_dir_b - is_dir_a;
 }
 
-void reset_terminal(int sig) {
+void
+reset_terminal(int sig)
+{
   def_prog_mode();
   endwin();
   refresh();

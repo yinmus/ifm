@@ -24,7 +24,8 @@ extern int s_hidden;
 extern char cp_buff[MAX_COPY_FILES][MAX_PATH];
 extern int cp_buff_count;
 
-typedef struct {
+typedef struct
+{
   char path[MAX_PATH];
   int marked;
 } MarkedFile;
@@ -33,7 +34,7 @@ extern MarkedFile marked_files[MAX_FILES];
 
 extern int last_clicked;
 
-extern char **environ;
+extern char** environ;
 
 extern int sd;
 
@@ -51,29 +52,50 @@ extern int sd;
 #define PAGE_DOWN KEY_NPAGE
 #endif
 
-void list(const char *dir_path, const char *filter, bool show_dirs,
-          bool show_files);
-void rm(const char *path);
-void open_file(const char *filename);
-void cr_file();
-void cr_dir();
-void ren(const char *filename);
-void open_with(const char *filename);
-void to_back();
-void to_home();
-void show_marked_files();
-void mark_help();
-int cpe(char *buffer, int max_len, const char *prompt);
-int confrim_delete(const char *filename);
-void goto_cmd(int next_char);
-void resolve_path(const char *input, char *output, size_t size);
-void handle_archive(const char *filename);
-void line_clear(int y);
-void gtimeout(int ms);
-void search();
-void vi();
-void search_UP();
-void search_DN();
+void
+list(const char* dir_path, const char* filter, bool show_dirs, bool show_files);
+void
+rm(const char* path);
+void
+open_file(const char* filename);
+void
+cr_file();
+void
+cr_dir();
+void
+ren(const char* filename);
+void
+open_with(const char* filename);
+void
+to_back();
+void
+to_home();
+void
+show_marked_files();
+void
+mark_help();
+int
+cpe(char* buffer, int max_len, const char* prompt);
+int
+confrim_delete(const char* filename);
+void
+goto_cmd(int next_char);
+void
+resolve_path(const char* input, char* output, size_t size);
+void
+handle_archive(const char* filename);
+void
+line_clear(int y);
+void
+gtimeout(int ms);
+void
+search();
+void
+vi();
+void
+search_UP();
+void
+search_DN();
 
 #define DIRT(path)                                                             \
   ({                                                                           \
@@ -89,10 +111,10 @@ void search_DN();
   ({                                                                           \
     int _found = 0;                                                            \
     if ((haystack) != NULL && (needle) != NULL) {                              \
-      const char *_h = (haystack);                                             \
+      const char* _h = (haystack);                                             \
       while (*_h && !_found) {                                                 \
-        const char *_h_ptr = _h;                                               \
-        const char *_n_ptr = (needle);                                         \
+        const char* _h_ptr = _h;                                               \
+        const char* _n_ptr = (needle);                                         \
         while (tolower((unsigned char)*_h_ptr) ==                              \
                tolower((unsigned char)*_n_ptr)) {                              \
           _h_ptr++;                                                            \
@@ -140,25 +162,45 @@ void search_DN();
 #define __CUT __cut()
 #endif
 
-void __exit();
-void __scrl_up();
-void __scrl_down();
-void __goto_last_file();
-void __goto();
-void __hidden_files();
-void __to_frwd();
-void __mark_file();
-void __delete();
-void __make_dir();
-void __make_file();
-void __rename();
-void __PG_scrl_up();
-void __PG_scrl_dn();
-void __tab_handle();
-void __copy();
-void __cut();
-void __paste();
-void __echo(const char *t, int y);
-void __to_prev();
+void
+__exit();
+void
+__scrl_up();
+void
+__scrl_down();
+void
+__goto_last_file();
+void
+__goto();
+void
+__hidden_files();
+void
+__to_frwd();
+void
+__mark_file();
+void
+__delete();
+void
+__make_dir();
+void
+__make_file();
+void
+__rename();
+void
+__PG_scrl_up();
+void
+__PG_scrl_dn();
+void
+__tab_handle();
+void
+__copy();
+void
+__cut();
+void
+__paste();
+void
+__echo(const char* t, int y);
+void
+__to_prev();
 
 #endif

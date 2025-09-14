@@ -46,19 +46,22 @@ char lpath[MAX_PATH];
 
 int s_hidden = 0;
 int sd = 1;
-MarkedFile marked_files[MAX_FILES] = {0};
+MarkedFile marked_files[MAX_FILES] = { 0 };
 
-void line_clear(int y) {
+void
+line_clear(int y)
+{
   move(y, 0);
   clrtoeol();
   refresh();
 }
 
-void list(const char *dir_path, const char *filter, bool show_dirs,
-          bool show_files) {
+void
+list(const char* dir_path, const char* filter, bool show_dirs, bool show_files)
+{
   assert(dir_path != NULL && "dir_path cannot be NULL");
 
-  DIR *dir = opendir(dir_path);
+  DIR* dir = opendir(dir_path);
   if (!dir) {
     return;
   }
@@ -72,7 +75,7 @@ void list(const char *dir_path, const char *filter, bool show_dirs,
 
   bool show_all = !show_dirs && !show_files;
 
-  struct dirent *entry;
+  struct dirent* entry;
   while ((entry = readdir(dir)) != NULL && file_count < MAX_FILES) {
     if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
       continue;
@@ -107,7 +110,9 @@ void list(const char *dir_path, const char *filter, bool show_dirs,
   qsort(files, file_count, MAX_PATH, compare);
 }
 
-void rm(const char *path) {
+void
+rm(const char* path)
+{
   struct stat st;
 
   if (lstat(path, &st) != 0) {
@@ -119,7 +124,10 @@ void rm(const char *path) {
 
   if (S_ISLNK(st.st_mode)) {
     if (unlink(path) != 0) {
-      mvprintw(LINES - 1, 0, "E: Cannot remove symlink '%s' - %s", path,
+      mvprintw(LINES - 1,
+               0,
+               "E: Cannot remove symlink '%s' - %s",
+               path,
                strerror(errno));
       refresh();
       getch();
@@ -128,16 +136,19 @@ void rm(const char *path) {
   }
 
   if (S_ISDIR(st.st_mode)) {
-    DIR *dir = opendir(path);
+    DIR* dir = opendir(path);
     if (!dir) {
-      mvprintw(LINES - 1, 0, "E: Cannot open directory '%s' - %s", path,
+      mvprintw(LINES - 1,
+               0,
+               "E: Cannot open directory '%s' - %s",
+               path,
                strerror(errno));
       refresh();
       getch();
       return;
     }
 
-    struct dirent *entry;
+    struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
       if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
         continue;
@@ -154,19 +165,28 @@ void rm(const char *path) {
       if (errno == EACCES) {
         if (chmod(path, 0700) == 0) {
           if (rmdir(path) != 0) {
-            mvprintw(LINES - 1, 0, "E: Cannot remove directory '%s' - %s", path,
+            mvprintw(LINES - 1,
+                     0,
+                     "E: Cannot remove directory '%s' - %s",
+                     path,
                      strerror(errno));
             refresh();
             getch();
           }
         } else {
-          mvprintw(LINES - 1, 0, "E: Cannot change permissions for '%s' - %s",
-                   path, strerror(errno));
+          mvprintw(LINES - 1,
+                   0,
+                   "E: Cannot change permissions for '%s' - %s",
+                   path,
+                   strerror(errno));
           refresh();
           getch();
         }
       } else {
-        mvprintw(LINES - 1, 0, "E: Cannot remove directory '%s' - %s", path,
+        mvprintw(LINES - 1,
+                 0,
+                 "E: Cannot remove directory '%s' - %s",
+                 path,
                  strerror(errno));
         refresh();
         getch();
@@ -177,19 +197,28 @@ void rm(const char *path) {
       if (errno == EACCES) {
         if (chmod(path, 0600) == 0) {
           if (remove(path) != 0) {
-            mvprintw(LINES - 1, 0, "E: Cannot remove file '%s' - %s", path,
+            mvprintw(LINES - 1,
+                     0,
+                     "E: Cannot remove file '%s' - %s",
+                     path,
                      strerror(errno));
             refresh();
             getch();
           }
         } else {
-          mvprintw(LINES - 1, 0, "E: Cannot change permissions for '%s' - %s",
-                   path, strerror(errno));
+          mvprintw(LINES - 1,
+                   0,
+                   "E: Cannot change permissions for '%s' - %s",
+                   path,
+                   strerror(errno));
           refresh();
           getch();
         }
       } else {
-        mvprintw(LINES - 1, 0, "E: Cannot remove file '%s' - %s", path,
+        mvprintw(LINES - 1,
+                 0,
+                 "E: Cannot remove file '%s' - %s",
+                 path,
                  strerror(errno));
         refresh();
         getch();
@@ -198,7 +227,9 @@ void rm(const char *path) {
   }
 }
 
-void open_file(const char *filename) {
+void
+open_file(const char* filename)
+{
   assert(filename != NULL && "filename cannot be NULL");
   assert(strlen(filename) > 0 && "filename cannot be empty");
 
@@ -231,7 +262,7 @@ void open_file(const char *filename) {
   }
 
   if (stat(full_path, &st) == 0 && st.st_size == 0) {
-    const char *editor = getenv("EDITOR");
+    const char* editor = getenv("EDITOR");
     if (editor) {
       def_prog_mode();
       endwin();
@@ -267,8 +298,8 @@ void open_file(const char *filename) {
     return;
   }
 
-  const char *mime_type = magic_file(magic, full_path);
-  const char *editor = getenv("EDITOR");
+  const char* mime_type = magic_file(magic, full_path);
+  const char* editor = getenv("EDITOR");
   char command[MAX_PATH + 50];
 
   if (mime_type && strstr(mime_type, "text/") && editor) {
@@ -288,8 +319,10 @@ void open_file(const char *filename) {
   reset_terminal(0);
 }
 
-void cr_file() {
-  char filename[MAX_NAME] = {0};
+void
+cr_file()
+{
+  char filename[MAX_NAME] = { 0 };
   if (cpe(filename, MAX_NAME, "[path]/file name: ")) {
     assert(strlen(filename) > 0 && "filename cannot be empty");
 
@@ -308,9 +341,12 @@ void cr_file() {
       return;
     }
 
-    FILE *file = fopen(full_path, "w");
+    FILE* file = fopen(full_path, "w");
     if (file == NULL) {
-      mvprintw(LINES - 1, 0, "E: Cannot change permissions for '%s' - %s", path,
+      mvprintw(LINES - 1,
+               0,
+               "E: Cannot change permissions for '%s' - %s",
+               path,
                strerror(errno));
       refresh();
       gtimeout(500);
@@ -331,14 +367,18 @@ void cr_file() {
   }
 }
 
-void gtimeout(int ms) {
+void
+gtimeout(int ms)
+{
   timeout(ms);
   int ch = getch();
   timeout(-1);
 }
 
-void cr_dir() {
-  char dirname[MAX_NAME] = {0};
+void
+cr_dir()
+{
+  char dirname[MAX_NAME] = { 0 };
   if (cpe(dirname, MAX_NAME, "[path]/dir name: ")) {
     if (strlen(dirname) == 0) {
       mvprintw(LINES - 1, 0, "E: Directory name cannot be empty");
@@ -366,13 +406,16 @@ void cr_dir() {
     int result = mkdir(full_path, 0777);
     if (result != 0) {
       if (errno == EACCES) {
-        mvprintw(LINES - 1, 0, "E: Cannot change permissions for '%s' - %s",
-                 path, strerror(errno));
+        mvprintw(LINES - 1,
+                 0,
+                 "E: Cannot change permissions for '%s' - %s",
+                 path,
+                 strerror(errno));
         refresh();
         gtimeout(500);
       } else {
-        mvprintw(LINES - 1, 0, "E: Cannot create directory E:%s",
-                 strerror(errno));
+        mvprintw(
+          LINES - 1, 0, "E: Cannot create directory E:%s", strerror(errno));
       }
       gtimeout(500);
       return;
@@ -390,7 +433,9 @@ void cr_dir() {
   }
 }
 
-void ren(const char *filename) {
+void
+ren(const char* filename)
+{
   assert(filename != NULL && "filename cannot be NULL");
   assert(strlen(filename) > 0 && "filename cannot be empty");
 
@@ -441,7 +486,9 @@ void ren(const char *filename) {
   }
 }
 
-void open_with(const char *filename) {
+void
+open_with(const char* filename)
+{
   char full_path[MAX_PATH];
   snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
 
@@ -451,7 +498,7 @@ void open_with(const char *filename) {
     return;
   }
 
-  char command[MAX_PATH] = {0};
+  char command[MAX_PATH] = { 0 };
   mvprintw(LINES - 1, 0, "open with: ");
   clrtoeol();
   refresh();
@@ -501,7 +548,9 @@ void open_with(const char *filename) {
   ;
 }
 
-void to_back() {
+void
+to_back()
+{
   strncpy(lpath, path, sizeof(lpath));
 
   if (strcmp(path, "/") == 0) {
@@ -512,7 +561,7 @@ void to_back() {
     return;
   }
 
-  char *last_slash = strrchr(path, '/');
+  char* last_slash = strrchr(path, '/');
   if (!last_slash) {
     line_clear(LINES - 1);
     mvprintw(LINES - 1, 0, "E: invalid path format");
@@ -539,7 +588,7 @@ void to_back() {
   ;
   selected = 0;
 
-  char *old_dir_name = basename(lpath);
+  char* old_dir_name = basename(lpath);
   for (int i = 0; i < file_count; i++) {
     if (strcmp(files[i], old_dir_name) == 0) {
       selected = i;
@@ -556,12 +605,14 @@ void to_back() {
     offset = 0;
 }
 
-void to_home() {
+void
+to_home()
+{
   if (strcmp(path, "/") != 0) {
     strncpy(lpath, path, sizeof(lpath));
   }
 
-  const char *home = getenv("HOME");
+  const char* home = getenv("HOME");
   if (home) {
     strncpy(path, home, sizeof(path));
     if (chdir(path) != 0) {
@@ -581,7 +632,9 @@ void to_home() {
   }
 }
 
-int cpe(char *buffer, int max_len, const char *prompt) {
+int
+cpe(char* buffer, int max_len, const char* prompt)
+{
   echo();
   curs_set(1);
 
@@ -616,7 +669,8 @@ int cpe(char *buffer, int max_len, const char *prompt) {
           char_len++;
         }
         pos -= char_len;
-        memmove(&buffer[pos], &buffer[pos + char_len],
+        memmove(&buffer[pos],
+                &buffer[pos + char_len],
                 strlen(buffer) - pos - char_len + 1);
       }
     } else if (ch == KEY_DC) {
@@ -625,7 +679,8 @@ int cpe(char *buffer, int max_len, const char *prompt) {
         while ((buffer[pos + char_len] & 0xC0) == 0x80) {
           char_len++;
         }
-        memmove(&buffer[pos], &buffer[pos + char_len],
+        memmove(&buffer[pos],
+                &buffer[pos + char_len],
                 strlen(buffer) - pos - char_len + 1);
       }
     } else if (ch == KEY_LEFT) {
@@ -665,7 +720,9 @@ int cpe(char *buffer, int max_len, const char *prompt) {
   return 1;
 }
 
-int confrim_delete(const char *filename) {
+int
+confrim_delete(const char* filename)
+{
   curs_set(1);
   noecho();
 
@@ -698,7 +755,9 @@ int confrim_delete(const char *filename) {
   return confirmed;
 }
 
-void resolve_path(const char *input, char *output, size_t size) {
+void
+resolve_path(const char* input, char* output, size_t size)
+{
   if (!input || !output || size == 0)
     return;
 
@@ -717,18 +776,20 @@ void resolve_path(const char *input, char *output, size_t size) {
   }
 }
 
-void search() {
+void
+search()
+{
   assert(path != NULL && "path cannot be NULL");
   assert(strlen(path) > 0 && "path cannot be empty");
 
-  char filter[MAX_NAME] = {0};
+  char filter[MAX_NAME] = { 0 };
   search_count = 0;
 
   if (cpe(filter, MAX_NAME, "/")) {
     if (strlen(filter) > 0) {
-      DIR *dir = opendir(path);
+      DIR* dir = opendir(path);
       if (dir) {
-        struct dirent *entry;
+        struct dirent* entry;
         while ((entry = readdir(dir)) != NULL && search_count < MAX_FILES) {
           if (strcmp(entry->d_name, ".") == 0 ||
               strcmp(entry->d_name, "..") == 0)
@@ -764,7 +825,9 @@ void search() {
   }
 }
 
-void search_DN() {
+void
+search_DN()
+{
   if (search_count == 0)
     return;
 
@@ -790,7 +853,9 @@ void search_DN() {
   }
 }
 
-void search_UP() {
+void
+search_UP()
+{
   if (search_count == 0)
     return;
 
@@ -816,7 +881,9 @@ void search_UP() {
   }
 }
 
-void handle_archive(const char *filename) {
+void
+handle_archive(const char* filename)
+{
   char full_path[MAX_PATH];
   snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
 
@@ -839,78 +906,84 @@ void handle_archive(const char *filename) {
 
   int ch = getch();
   switch (tolower(ch)) {
-  case 'l': {
-    char cmd[MAX_PATH * 3];
-    snprintf(cmd, sizeof(cmd), "ifm-ar -t \"%s\" > \"%s\" 2>&1", full_path,
-             tmp_path);
-    system(cmd);
+    case 'l': {
+      char cmd[MAX_PATH * 3];
+      snprintf(cmd,
+               sizeof(cmd),
+               "ifm-ar -t \"%s\" > \"%s\" 2>&1",
+               full_path,
+               tmp_path);
+      system(cmd);
 
-    def_prog_mode();
-    endwin();
+      def_prog_mode();
+      endwin();
 
-    char less_cmd[MAX_PATH + 10];
-    snprintf(less_cmd, sizeof(less_cmd), "less -r \"%s\"", tmp_path);
-    system(less_cmd);
+      char less_cmd[MAX_PATH + 10];
+      snprintf(less_cmd, sizeof(less_cmd), "less -r \"%s\"", tmp_path);
+      system(less_cmd);
 
-    unlink(tmp_path);
-    reset_prog_mode();
-    refresh();
-    break;
-  }
-  case 'x': {
-    char extract_path[MAX_PATH];
-    strcpy(extract_path, path);
-
-    if (cpe(extract_path, sizeof(extract_path), "path: ")) {
-      if (strlen(extract_path) > 0) {
-        char *p = extract_path;
-        while (*p != '\0') {
-          if (*p == '/') {
-            *p = '\0';
-            mkdir(extract_path, 0755);
-            *p = '/';
-          }
-          p++;
-        }
-        mkdir(extract_path, 0755);
-      } else {
-        strcpy(extract_path, path);
-      }
-    } else {
       unlink(tmp_path);
-      return;
+      reset_prog_mode();
+      refresh();
+      break;
     }
+    case 'x': {
+      char extract_path[MAX_PATH];
+      strcpy(extract_path, path);
 
-    char cmd[MAX_PATH * 3];
-    snprintf(cmd, sizeof(cmd), "ifm-ar -x \"%s\" -o \"%s\"", full_path,
-             extract_path);
-    list(path, NULL, false, false);
-    ;
-    refresh();
+      if (cpe(extract_path, sizeof(extract_path), "path: ")) {
+        if (strlen(extract_path) > 0) {
+          char* p = extract_path;
+          while (*p != '\0') {
+            if (*p == '/') {
+              *p = '\0';
+              mkdir(extract_path, 0755);
+              *p = '/';
+            }
+            p++;
+          }
+          mkdir(extract_path, 0755);
+        } else {
+          strcpy(extract_path, path);
+        }
+      } else {
+        unlink(tmp_path);
+        return;
+      }
 
-    int result = system(cmd);
-
-    move(LINES - 1, 0);
-    clrtoeol();
-    if (result == 0) {
-      mvprintw(LINES - 1, 0, "Extracted to: %s", extract_path);
+      char cmd[MAX_PATH * 3];
+      snprintf(cmd,
+               sizeof(cmd),
+               "ifm-ar -x \"%s\" -o \"%s\"",
+               full_path,
+               extract_path);
       list(path, NULL, false, false);
       ;
       refresh();
-      gtimeout(300);
-    } else {
-      mvprintw(LINES - 1, 0, "E extracting to: %s", extract_path);
+
+      int result = system(cmd);
+
+      move(LINES - 1, 0);
+      clrtoeol();
+      if (result == 0) {
+        mvprintw(LINES - 1, 0, "Extracted to: %s", extract_path);
+        list(path, NULL, false, false);
+        ;
+        refresh();
+        gtimeout(300);
+      } else {
+        mvprintw(LINES - 1, 0, "E extracting to: %s", extract_path);
+        refresh();
+        gtimeout(500);
+        list(path, NULL, false, false);
+        ;
+      }
       refresh();
-      gtimeout(500);
-      list(path, NULL, false, false);
-      ;
+      break;
     }
-    refresh();
-    break;
-  }
-  case 'c':
-  default:
-    break;
+    case 'c':
+    default:
+      break;
   }
 
   move(LINES - 1, 0);
@@ -922,8 +995,10 @@ void handle_archive(const char *filename) {
   unlink(tmp_path);
 }
 
-void vi() {
-  char cmd[MAX_NAME] = {0};
+void
+vi()
+{
+  char cmd[MAX_NAME] = { 0 };
 
   while (true) {
     if (!cpe(cmd, MAX_NAME, ":")) {
@@ -952,8 +1027,8 @@ void vi() {
     }
 
     if (strncmp(cmd, "set ", 4) == 0) {
-      char *setting = cmd + 4;
-      char *value = strchr(setting, ' ');
+      char* setting = cmd + 4;
+      char* value = strchr(setting, ' ');
 
       if (value) {
         *value = '\0';
@@ -1041,7 +1116,9 @@ void vi() {
   }
 }
 
-void __exit() {
+void
+__exit()
+{
   clear();
   refresh();
   cp_buff_count = 0;
@@ -1050,7 +1127,9 @@ void __exit() {
   return;
 }
 
-void __scrl_up() {
+void
+__scrl_up()
+{
   if (selected > 0) {
     selected--;
   } else {
@@ -1058,7 +1137,9 @@ void __scrl_up() {
   }
 }
 
-void __scrl_down() {
+void
+__scrl_down()
+{
   if (selected < file_count - 1) {
     selected++;
   } else {
@@ -1066,13 +1147,23 @@ void __scrl_down() {
   }
 }
 
-void __goto_last_file() { selected = file_count - 1; }
+void
+__goto_last_file()
+{
+  selected = file_count - 1;
+}
 
-void __goto() { goto_help(); }
+void
+__goto()
+{
+  goto_help();
+}
 
-void __hidden_files() {
+void
+__hidden_files()
+{
   int prev_selected = selected;
-  char prev_file[MAX_PATH] = {0};
+  char prev_file[MAX_PATH] = { 0 };
   if (prev_selected >= 0 && prev_selected < file_count) {
     strncpy(prev_file, files[prev_selected], MAX_PATH);
   }
@@ -1094,7 +1185,9 @@ void __hidden_files() {
   Display();
 }
 
-void __to_prev() {
+void
+__to_prev()
+{
   if (strlen(lpath) == 0) {
     return;
   }
@@ -1119,49 +1212,54 @@ void __to_prev() {
   offset = 0;
 }
 
+void
+__to_frwd()
+{
+  char full_path[MAX_PATH];
 
-void __to_frwd() {
-    char full_path[MAX_PATH];
+  snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
 
-    snprintf(full_path, sizeof(full_path), "%s/%s", path, files[selected]);
+  struct stat st;
+  if (lstat(full_path, &st) == 0) {
+    if (S_ISDIR(st.st_mode) ||
+        (S_ISLNK(st.st_mode) && stat(full_path, &st) == 0 &&
+         S_ISDIR(st.st_mode))) {
+      strncpy(lpath, path, sizeof(lpath));
 
-    struct stat st;
-    if (lstat(full_path, &st) == 0) {
-        if (S_ISDIR(st.st_mode) || (S_ISLNK(st.st_mode) && stat(full_path, &st) == 0 && S_ISDIR(st.st_mode))) {
-            strncpy(lpath, path, sizeof(lpath));
+      if (chdir(full_path) != 0) {
+        line_clear(LINES - 1);
+        mvprintw(LINES - 1, 0, "E: Cannot access directory");
+        refresh();
+        gtimeout(500);
+        return;
+      }
 
-            if (chdir(full_path) != 0) {
-                line_clear(LINES - 1);
-                mvprintw(LINES - 1, 0, "E: Cannot access directory");
-                refresh();
-                gtimeout(500);
-                return;
-            }
-
-            getcwd(path, sizeof(path));
-            list(path, NULL, false, false);
-            selected = 0;
-            offset = 0;
-            return;
-        }
+      getcwd(path, sizeof(path));
+      list(path, NULL, false, false);
+      selected = 0;
+      offset = 0;
+      return;
     }
+  }
 
-    const char *ext = strrchr(files[selected], '.');
-    if (ext && (strcasecmp(ext, ".zip")         == 0    || strcasecmp(ext, ".tar") == 0 ||
-                strcasecmp(ext, ".gz")          == 0    || strcasecmp(ext, ".bz2") == 0 ||
-                strcasecmp(ext, ".xz")          == 0    || strcasecmp(ext, ".rar") == 0 ||
-                strcasecmp(ext, ".7z")          == 0    || strcasecmp(ext, ".ar") == 0  ||
-                strcasecmp(ext, ".lz")          == 0    || strcasecmp(ext, ".bz") == 0  ||
-                strcasecmp(ext, ".pkg.tar.zst") == 0    || strcasecmp(ext, ".tgz") == 0 ||
-                strcasecmp(ext, ".tar.gz") == 0)) {
-        handle_archive(files[selected]);
-    } else {
-        open_file(files[selected]);
-    }
+  const char* ext = strrchr(files[selected], '.');
+  if (ext &&
+      (strcasecmp(ext, ".zip") == 0 || strcasecmp(ext, ".tar") == 0 ||
+       strcasecmp(ext, ".gz") == 0 || strcasecmp(ext, ".bz2") == 0 ||
+       strcasecmp(ext, ".xz") == 0 || strcasecmp(ext, ".rar") == 0 ||
+       strcasecmp(ext, ".7z") == 0 || strcasecmp(ext, ".ar") == 0 ||
+       strcasecmp(ext, ".lz") == 0 || strcasecmp(ext, ".bz") == 0 ||
+       strcasecmp(ext, ".pkg.tar.zst") == 0 || strcasecmp(ext, ".tgz") == 0 ||
+       strcasecmp(ext, ".tar.gz") == 0)) {
+    handle_archive(files[selected]);
+  } else {
+    open_file(files[selected]);
+  }
 }
 
-
-void __mark_file() {
+void
+__mark_file()
+{
   assert(selected >= 0 && selected < file_count && "Invalid selected index");
   assert(strlen(path) > 0 && "Empty current path");
   assert(strlen(files[selected]) > 0 && "Empty filename");
@@ -1205,7 +1303,9 @@ void __mark_file() {
   }
 }
 
-void __delete() {
+void
+__delete()
+{
   int any_marked = 0;
   for (int i = 0; i < MAX_FILES; i++) {
     if (marked_files[i].marked)
@@ -1237,33 +1337,47 @@ void __delete() {
   }
 }
 
-void __make_dir() {
+void
+__make_dir()
+{
   cr_dir();
   list(path, NULL, false, false);
   ;
 }
 
-void __make_file() {
+void
+__make_file()
+{
   cr_file();
   list(path, NULL, false, false);
   ;
 }
 
-void __rename() { ren(files[selected]); }
+void
+__rename()
+{
+  ren(files[selected]);
+}
 
-void __PG_scrl_up() {
+void
+__PG_scrl_up()
+{
   selected -= (LINES - 4) / 2;
   if (selected < 0)
     selected = 0;
 }
 
-void __PG_scrl_dn() {
+void
+__PG_scrl_dn()
+{
   selected += (LINES - 4) / 2;
   if (selected >= file_count)
     selected = file_count - 1;
 }
 
-void __tab_handle() {
+void
+__tab_handle()
+{
   if (selected < file_count - 1) {
     selected++;
   } else {
@@ -1271,13 +1385,17 @@ void __tab_handle() {
   }
 }
 
-void __echo(const char *t, int y) {
+void
+__echo(const char* t, int y)
+{
   attron(A_BOLD);
   mvprintw(0, y, "%s", t);
   attroff(A_BOLD);
 }
 
-void __cut() {
+void
+__cut()
+{
   assert(selected >= 0 && selected < file_count && "Invalid selected index");
   assert(strlen(path) > 0 && "Empty current path");
   assert(strlen(files[selected]) > 0 && "Empty filename");
@@ -1299,7 +1417,7 @@ void __cut() {
   }
   int start_x = 0;
 
-  WINDOW *win = newwin(win_height, win_width, start_y, start_x);
+  WINDOW* win = newwin(win_height, win_width, start_y, start_x);
   keypad(win, TRUE);
 
   __echo("c", COLS - 1);
@@ -1317,51 +1435,53 @@ void __cut() {
 
   if (ch != ERR) {
     switch (ch) {
-    case 'x':
-      if (access(full_path, F_OK) != 0) {
-        line_clear(LINES - 1);
-        mvprintw(LINES - 1, 0, "[E:01] File not found");
-        refresh();
-        gtimeout(800);
-        return;
-      }
-
-      for (int i = 0; i < cp_buff_count; i++) {
-        if (strcmp(cp_buff[i], full_path) == 0) {
+      case 'x':
+        if (access(full_path, F_OK) != 0) {
           line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
+          mvprintw(LINES - 1, 0, "[E:01] File not found");
           refresh();
           gtimeout(800);
           return;
         }
-      }
 
-      if (cp_buff_count >= MAX_COPY_FILES) {
+        for (int i = 0; i < cp_buff_count; i++) {
+          if (strcmp(cp_buff[i], full_path) == 0) {
+            line_clear(LINES - 1);
+            mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
+            refresh();
+            gtimeout(800);
+            return;
+          }
+        }
+
+        if (cp_buff_count >= MAX_COPY_FILES) {
+          line_clear(LINES - 1);
+          mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
+          refresh();
+          gtimeout(500);
+          return;
+        }
+
+        strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
+
+        cp_buff_ct[cp_buff_count] = true;
+        cp_buff_count++;
+
         line_clear(LINES - 1);
-        mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
+        mvprintw(LINES - 1, 0, "'%s' cut", files[selected]);
         refresh();
         gtimeout(500);
-        return;
-      }
+        break;
 
-      strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
-
-      cp_buff_ct[cp_buff_count] = true;
-      cp_buff_count++;
-
-      line_clear(LINES - 1);
-      mvprintw(LINES - 1, 0, "'%s' cut", files[selected]);
-      refresh();
-      gtimeout(500);
-      break;
-
-    default:
-      break;
+      default:
+        break;
     }
   }
 }
 
-void __copy() {
+void
+__copy()
+{
   assert(selected >= 0 && selected < file_count && "Invalid selected index");
   assert(strlen(path) > 0 && "Empty current path");
   assert(strlen(files[selected]) > 0 && "Empty filename");
@@ -1383,7 +1503,7 @@ void __copy() {
   }
   int start_x = 0;
 
-  WINDOW *win = newwin(win_height, win_width, start_y, start_x);
+  WINDOW* win = newwin(win_height, win_width, start_y, start_x);
   keypad(win, TRUE);
 
   __echo("y", COLS - 1);
@@ -1401,51 +1521,53 @@ void __copy() {
 
   if (ch != ERR) {
     switch (ch) {
-    case 'y':
-      if (access(full_path, F_OK) != 0) {
-        line_clear(LINES - 1);
-        mvprintw(LINES - 1, 0, "[E:01] File not found");
-        refresh();
-        gtimeout(800);
-        return;
-      }
-
-      for (int i = 0; i < cp_buff_count; i++) {
-        if (strcmp(cp_buff[i], full_path) == 0) {
+      case 'y':
+        if (access(full_path, F_OK) != 0) {
           line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
+          mvprintw(LINES - 1, 0, "[E:01] File not found");
           refresh();
           gtimeout(800);
           return;
         }
-      }
 
-      if (cp_buff_count >= MAX_COPY_FILES) {
+        for (int i = 0; i < cp_buff_count; i++) {
+          if (strcmp(cp_buff[i], full_path) == 0) {
+            line_clear(LINES - 1);
+            mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
+            refresh();
+            gtimeout(800);
+            return;
+          }
+        }
+
+        if (cp_buff_count >= MAX_COPY_FILES) {
+          line_clear(LINES - 1);
+          mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
+          refresh();
+          gtimeout(500);
+          return;
+        }
+
+        strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
+        cp_buff_count++;
+
         line_clear(LINES - 1);
-        mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
+        mvprintw(LINES - 1, 0, "'%s' copied", files[selected]);
         refresh();
         gtimeout(500);
-        return;
-      }
+        break;
 
-      strncpy(cp_buff[cp_buff_count], full_path, MAX_PATH);
-      cp_buff_count++;
-
-      line_clear(LINES - 1);
-      mvprintw(LINES - 1, 0, "'%s' copied", files[selected]);
-      refresh();
-      gtimeout(500);
-      break;
-
-    default:
-      break;
+      default:
+        break;
     }
     {
     }
   }
 }
 
-void __paste() {
+void
+__paste()
+{
   if (cp_buff_count == 0) {
     line_clear(LINES - 1);
     mvprintw(LINES - 1, 0, "[E:04] Buffer empty");
@@ -1466,7 +1588,7 @@ void __paste() {
   bool cut_items_present = false;
 
   for (int i = 0; i < cp_buff_count; i++) {
-    char *name = basename(cp_buff[i]);
+    char* name = basename(cp_buff[i]);
     char dest[MAX_PATH];
     snprintf(dest, sizeof(dest), "%s/%s", path, name);
 
@@ -1476,8 +1598,8 @@ void __paste() {
     }
 
     char cmd[MAX_PATH * 2 + 10];
-    snprintf(cmd, sizeof(cmd), "cp -r \"%s\" \"%s\" 2>/dev/null", cp_buff[i],
-             dest);
+    snprintf(
+      cmd, sizeof(cmd), "cp -r \"%s\" \"%s\" 2>/dev/null", cp_buff[i], dest);
 
     if (system(cmd) == 0) {
       ok++;
@@ -1503,7 +1625,10 @@ void __paste() {
 
   line_clear(LINES - 1);
   if (fail == 0) {
-    mvprintw(LINES - 1, 0, "Pasted %d items%s", ok,
+    mvprintw(LINES - 1,
+             0,
+             "Pasted %d items%s",
+             ok,
              cut_items_present ? " (cut items removed)" : "");
     list(path, NULL, false, false);
     refresh();

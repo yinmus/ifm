@@ -4,7 +4,9 @@
 
 #include "ifm.h"
 
-void mark_help();
-void show_marked_files();
+void
+mark_help();
+void
+show_marked_files();
 
 #endif

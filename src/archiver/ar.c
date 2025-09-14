@@ -8,21 +8,24 @@
 #include <sys/stat.h>
 #include <time.h>
 
-void __path_R(char *path, const char *dir_to_remove) {
+void
+__path_R(char* path, const char* dir_to_remove)
+{
   size_t len = strlen(dir_to_remove);
   if (strncmp(path, dir_to_remove, len) == 0 &&
       (path[len] == '/' || path[len] == '\0')) {
-    memmove(path, path + len + (path[len] == '/' ? 1 : 0),
-            strlen(path) - len + 1);
+    memmove(
+      path, path + len + (path[len] == '/' ? 1 : 0), strlen(path) - len + 1);
   }
 }
 
-void setup_archive_support(struct archive *a, const char *filename) {
-  const char *dot = strrchr(filename, '.');
+void
+setup_archive_support(struct archive* a, const char* filename)
+{
+  const char* dot = strrchr(filename, '.');
   int is_pure_gz = 0;
 
   if (dot && (strcmp(dot, ".gz") == 0 || strcmp(dot, ".gzip") == 0)) {
-    /* Если имя заканчивается на .tar.gz или .tar.gzip — это не «чистый» gzip */
     if (!(strlen(filename) >= 7 &&
           (strcmp(filename + strlen(filename) - 7, ".tar.gz") == 0 ||
            strcmp(filename + strlen(filename) - 9, ".tar.gzip") == 0))) {
@@ -59,10 +62,12 @@ void setup_archive_support(struct archive *a, const char *filename) {
   }
 }
 
-void extract(const char *filename, const char *output_dir, int show_contents) {
-  struct archive *a = archive_read_new();
-  struct archive *ext = archive_write_disk_new();
-  struct archive_entry *entry;
+void
+extract(const char* filename, const char* output_dir, int show_contents)
+{
+  struct archive* a = archive_read_new();
+  struct archive* ext = archive_write_disk_new();
+  struct archive_entry* entry;
   int flags = ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_PERM |
               ARCHIVE_EXTRACT_ACL | ARCHIVE_EXTRACT_FFLAGS;
   int r;
@@ -78,7 +83,9 @@ void extract(const char *filename, const char *output_dir, int show_contents) {
   archive_write_disk_set_standard_lookup(ext);
 
   if ((r = archive_read_open_filename(a, filename, 10240)) != ARCHIVE_OK) {
-    fprintf(stderr, "Error opening archive '%s': %s\n", filename,
+    fprintf(stderr,
+            "Error opening archive '%s': %s\n",
+            filename,
             archive_error_string(a));
     archive_read_free(a);
     archive_write_free(ext);
@@ -86,10 +93,10 @@ void extract(const char *filename, const char *output_dir, int show_contents) {
   }
 
   while ((r = archive_read_next_header(a, &entry)) == ARCHIVE_OK) {
-    const char *path = archive_entry_pathname(entry);
-    char clean_path[1024] = {0};
+    const char* path = archive_entry_pathname(entry);
+    char clean_path[1024] = { 0 };
 
-    const char *dot = strrchr(filename, '.');
+    const char* dot = strrchr(filename, '.');
     int is_pure_gz = 0;
     if (dot && (strcmp(dot, ".gz") == 0 || strcmp(dot, ".gzip") == 0)) {
       if (!(strlen(filename) >= 7 &&
@@ -100,10 +107,10 @@ void extract(const char *filename, const char *output_dir, int show_contents) {
     }
 
     if (is_pure_gz) {
-      const char *last_slash = strrchr(filename, '/');
-      const char *base_name = last_slash ? last_slash + 1 : filename;
+      const char* last_slash = strrchr(filename, '/');
+      const char* base_name = last_slash ? last_slash + 1 : filename;
       strncpy(clean_path, base_name, sizeof(clean_path) - 1);
-      char *gz_ext = strstr(clean_path, ".gz");
+      char* gz_ext = strstr(clean_path, ".gz");
       if (gz_ext)
         *gz_ext = '\0';
       gz_ext = strstr(clean_path, ".gzip");
@@ -115,7 +122,7 @@ void extract(const char *filename, const char *output_dir, int show_contents) {
       __path_R(clean_path, "t");
     }
 
-    char fullpath[2048] = {0};
+    char fullpath[2048] = { 0 };
     if (output_dir && output_dir[0] != '\0') {
       char clean_output[1024];
       strncpy(clean_output, output_dir, sizeof(clean_output) - 1);
@@ -131,26 +138,27 @@ void extract(const char *filename, const char *output_dir, int show_contents) {
 
     r = archive_write_header(ext, entry);
     if (r < ARCHIVE_OK) {
-      fprintf(stderr, "Warning writing header: %s\n",
-              archive_error_string(ext));
+      fprintf(
+        stderr, "Warning writing header: %s\n", archive_error_string(ext));
     }
 
     if (archive_entry_size(entry) > 0) {
-      const void *buff;
+      const void* buff;
       size_t size;
       off_t offset;
       while ((r = archive_read_data_block(a, &buff, &size, &offset)) ==
              ARCHIVE_OK) {
         r = archive_write_data_block(ext, buff, size, offset);
         if (r < ARCHIVE_OK) {
-          fprintf(stderr, "Error writing data block: %s\n",
+          fprintf(stderr,
+                  "Error writing data block: %s\n",
                   archive_error_string(ext));
           break;
         }
       }
       if (r != ARCHIVE_EOF && r < ARCHIVE_OK) {
-        fprintf(stderr, "Error reading data block: %s\n",
-                archive_error_string(a));
+        fprintf(
+          stderr, "Error reading data block: %s\n", archive_error_string(a));
       }
     }
 
@@ -174,9 +182,11 @@ void extract(const char *filename, const char *output_dir, int show_contents) {
   archive_write_free(ext);
 }
 
-void list(const char *filename) {
-  struct archive *a = archive_read_new();
-  struct archive_entry *entry;
+void
+list(const char* filename)
+{
+  struct archive* a = archive_read_new();
+  struct archive_entry* entry;
   int r;
 
   if (!a) {
@@ -187,17 +197,19 @@ void list(const char *filename) {
   setup_archive_support(a, filename);
 
   if ((r = archive_read_open_filename(a, filename, 10240)) != ARCHIVE_OK) {
-    fprintf(stderr, "Error opening archive '%s': %s\n", filename,
+    fprintf(stderr,
+            "Error opening archive '%s': %s\n",
+            filename,
             archive_error_string(a));
     archive_read_free(a);
     return;
   }
 
   while ((r = archive_read_next_header(a, &entry)) == ARCHIVE_OK) {
-    const char *path = archive_entry_pathname(entry);
+    const char* path = archive_entry_pathname(entry);
     time_t mtime = archive_entry_mtime(entry);
-    const char *timestr = ctime(&mtime);
-    char timestr_trimmed[32] = {0};
+    const char* timestr = ctime(&mtime);
+    char timestr_trimmed[32] = { 0 };
 
     if (timestr) {
       strncpy(timestr_trimmed, timestr, sizeof(timestr_trimmed) - 1);
@@ -206,8 +218,10 @@ void list(const char *filename) {
         timestr_trimmed[tlen - 1] = '\0';
     }
 
-    printf("%s %10" PRIdMAX " %s %s\n", archive_entry_strmode(entry),
-           (intmax_t)archive_entry_size(entry), timestr_trimmed,
+    printf("%s %10" PRIdMAX " %s %s\n",
+           archive_entry_strmode(entry),
+           (intmax_t)archive_entry_size(entry),
+           timestr_trimmed,
            path ? path : "");
 
     archive_read_data_skip(a);
@@ -220,13 +234,15 @@ void list(const char *filename) {
   archive_read_free(a);
 }
 
-int main(int argc, char **argv) {
+int
+main(int argc, char** argv)
+{
   if (argc > 1 && strcmp(argv[1], "--help") == 0) {
     printf("Usage: %s [OPTION]... [FILE]...\n", argv[0]);
     printf("Extract and list archive contents.\n\n");
     printf("Options:\n");
-    printf(
-        "  -t, --list <archive>               List contents of the archive\n");
+    printf("  -t, --list <archive>               List contents of the "
+           "archive\n");
     printf("  -x, --extract <archive>            Extract files from the "
            "archive\n");
     printf("  -g, --unzip-check                  Show contents while "
@@ -238,8 +254,8 @@ int main(int argc, char **argv) {
   }
 
   int show_contents = 0;
-  const char *output_dir = NULL;
-  const char *archive_path = NULL;
+  const char* output_dir = NULL;
+  const char* archive_path = NULL;
   int mode = 0;
 
   for (int i = 1; i < argc; i++) {
