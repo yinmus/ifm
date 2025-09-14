@@ -37,7 +37,7 @@ static int search_count = 0;
 static int search_index = 0;
 static char search_results[MAX_FILES][MAX_PATH];
 
-char files[MAX_FILES][MAX_PATH];
+char** files = NULL;
 int file_count = 0;
 int selected = 0;
 int offset = 0;
@@ -47,7 +47,56 @@ char lpath[MAX_PATH];
 int s_hidden = 0;
 int sd = 1;
 MarkedFile marked_files[MAX_FILES] = { 0 };
+void
+init_files_array()
+{
+  if (files == NULL) {
+    files = malloc(MAX_FILES * sizeof(char*));
+    if (files == NULL) {
+      perror("Failed to allocate files array");
+      exit(EXIT_FAILURE);
+    }
 
+    for (int i = 0; i < MAX_FILES; i++) {
+      files[i] = malloc(MAX_PATH * sizeof(char));
+      if (files[i] == NULL) {
+        perror("Failed to allocate file path");
+        for (int j = 0; j < i; j++) {
+          free(files[j]);
+        }
+        free(files);
+        files = NULL;
+        exit(EXIT_FAILURE);
+      }
+      files[i][0] = '\0';
+    }
+  }
+}
+
+void
+free_files_array()
+{
+  if (files != NULL) {
+    for (int i = 0; i < MAX_FILES; i++) {
+      free(files[i]);
+    }
+    free(files);
+    files = NULL;
+  }
+}
+
+void
+resize_files_array(int new_size)
+{
+  char** new_files = realloc(files, new_size * sizeof(char*));
+  if (new_files != NULL) {
+    files = new_files;
+    for (int i = file_count; i < new_size; i++) {
+      files[i] = malloc(MAX_PATH * sizeof(char));
+      files[i][0] = '\0';
+    }
+  }
+}
 void
 line_clear(int y)
 {
@@ -60,6 +109,10 @@ void
 list(const char* dir_path, const char* filter, bool show_dirs, bool show_files)
 {
   assert(dir_path != NULL && "dir_path cannot be NULL");
+
+  if (files == NULL) {
+    init_files_array();
+  }
 
   DIR* dir = opendir(dir_path);
   if (!dir) {
@@ -103,11 +156,12 @@ list(const char* dir_path, const char* filter, bool show_dirs, bool show_files)
       continue;
     }
 
-    strncpy(files[file_count++], entry->d_name, MAX_PATH);
+    strncpy(files[file_count], entry->d_name, MAX_PATH);
+    file_count++;
   }
   closedir(dir);
 
-  qsort(files, file_count, MAX_PATH, compare);
+  qsort(files, file_count, sizeof(char*), compare);
 }
 
 void

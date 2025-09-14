@@ -3,8 +3,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "ifm.h"
 #include "goto.h"
+#include "ifm.h"
 
 void
 goto_cmd(int next_char)
@@ -115,7 +115,7 @@ goto_help()
   keypad(win, TRUE);
 
   mvwprintw(win, 2, 0, "key          command");
-  mvwhline(win,  3, 0, ACS_HLINE, win_width);
+  mvwhline(win, 3, 0, ACS_HLINE, win_width);
   mvwprintw(win, 4, 0, "/            cd /");
   mvwprintw(win, 5, 0, "c            cd /sys");
   mvwprintw(win, 6, 0, "d            cd /dev");

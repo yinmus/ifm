@@ -18,8 +18,8 @@ reference()
   printf("Options:\n");
   printf("  --help                  show this help message\n");
   printf("  -V                      show version information\n");
-  printf("  PATH                    open the specified directory\n\n");
-  printf("\n\nVersion: %s\n\n", IFM_VERSION);
+  printf("  PATH                    open the specified directory\n");
+  printf("\nVersion: %s\n\n", IFM_VERSION);
 }
 
 void
@@ -27,7 +27,7 @@ Version()
 {
   printf("ifm %s\n\n", IFM_VERSION);
   printf("Copyright (c) 2025 YINMUS-IFM\n");
-  printf("Released under the MIT License.\n\n");
+  printf("Released under the GPLV3.\n\n");
   printf("Author: Yinmus <https://github.com/yinmus/>\n");
   printf("Please report bugs: <https://github.com/yinmus/ifm/issues>\n");
 }
@@ -35,8 +35,8 @@ Version()
 int
 compare(const void* a, const void* b)
 {
-  const char* name_a = (const char*)a;
-  const char* name_b = (const char*)b;
+  const char* name_a = *(const char**)a;
+  const char* name_b = *(const char**)b;
 
   char path_a[MAX_PATH], path_b[MAX_PATH];
   snprintf(path_a, sizeof(path_a), "%s/%s", path, name_a);

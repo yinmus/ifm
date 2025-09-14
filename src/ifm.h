@@ -15,7 +15,7 @@
 #define MAX_DISPLAY_NAME (COLS > 55 ? (COLS - 45) : MIN_DISPLAY_NAME)
 #define CONTROL(c) ((c) & 0x1f)
 
-extern char files[MAX_FILES][MAX_PATH];
+extern char** files;
 extern int file_count, selected, offset;
 extern char path[MAX_PATH];
 extern char lpath[MAX_PATH];
@@ -51,7 +51,12 @@ extern int sd;
 #define PAGE_UP KEY_PPAGE
 #define PAGE_DOWN KEY_NPAGE
 #endif
-
+void
+init_files_array();
+void
+free_files_array();
+void
+resize_files_array(int new_size);
 void
 list(const char* dir_path, const char* filter, bool show_dirs, bool show_files);
 void
