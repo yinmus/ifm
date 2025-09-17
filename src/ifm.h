@@ -52,11 +52,11 @@ extern int sd;
 #define PAGE_DOWN KEY_NPAGE
 #endif
 void
-init_files_array();
+init_files();
 void
-free_files_array();
+free_files();
 void
-resize_files_array(int new_size);
+resize_files(int new_size);
 void
 list(const char* dir_path, const char* filter, bool show_dirs, bool show_files);
 void

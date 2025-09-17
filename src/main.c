@@ -39,7 +39,7 @@ main(int argc, char* argv[])
     }
   } else {
     getcwd(path, sizeof(path));
-    init_files_array();
+    init_files();
   }
 
   assert(initscr() != NULL);
@@ -305,6 +305,6 @@ main(int argc, char* argv[])
   }
 
   endwin();
-  free_files_array();
+  free_files();
   return 0;
 }

@@ -48,7 +48,7 @@ int s_hidden = 0;
 int sd = 1;
 MarkedFile marked_files[MAX_FILES] = { 0 };
 void
-init_files_array()
+init_files()
 {
   if (files == NULL) {
     files = malloc(MAX_FILES * sizeof(char*));
@@ -74,7 +74,7 @@ init_files_array()
 }
 
 void
-free_files_array()
+free_files()
 {
   if (files != NULL) {
     for (int i = 0; i < MAX_FILES; i++) {
@@ -86,7 +86,7 @@ free_files_array()
 }
 
 void
-resize_files_array(int new_size)
+resize_files(int new_size)
 {
   char** new_files = realloc(files, new_size * sizeof(char*));
   if (new_files != NULL) {
@@ -111,7 +111,7 @@ list(const char* dir_path, const char* filter, bool show_dirs, bool show_files)
   assert(dir_path != NULL && "dir_path cannot be NULL");
 
   if (files == NULL) {
-    init_files_array();
+    init_files();
   }
 
   DIR* dir = opendir(dir_path);
