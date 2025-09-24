@@ -961,17 +961,20 @@ handle_archive(const char* filename)
   int ch = getch();
   switch (tolower(ch)) {
     case 'l': {
+      line_clear(LINES - 1);
+      mvprintw(LINES - 1, 0, "please wait");
+      refresh();
       char cmd[MAX_PATH * 3];
       snprintf(cmd,
                sizeof(cmd),
                "ifm-ar -t \"%s\" > \"%s\" 2>&1",
                full_path,
                tmp_path);
+
       system(cmd);
 
       def_prog_mode();
       endwin();
-
       char less_cmd[MAX_PATH + 10];
       snprintf(less_cmd, sizeof(less_cmd), "less -r \"%s\"", tmp_path);
       system(less_cmd);
@@ -1004,7 +1007,9 @@ handle_archive(const char* filename)
         unlink(tmp_path);
         return;
       }
-
+      line_clear(LINES - 1);
+      mvprintw(LINES - 1, 0, "please wait");
+      refresh();
       char cmd[MAX_PATH * 3];
       snprintf(cmd,
                sizeof(cmd),
@@ -1012,7 +1017,6 @@ handle_archive(const char* filename)
                full_path,
                extract_path);
       list(path, NULL, false, false);
-      ;
       refresh();
 
       int result = system(cmd);
@@ -1022,7 +1026,6 @@ handle_archive(const char* filename)
       if (result == 0) {
         mvprintw(LINES - 1, 0, "Extracted to: %s", extract_path);
         list(path, NULL, false, false);
-        ;
         refresh();
         gtimeout(300);
       } else {
@@ -1030,7 +1033,6 @@ handle_archive(const char* filename)
         refresh();
         gtimeout(500);
         list(path, NULL, false, false);
-        ;
       }
       refresh();
       break;
@@ -1040,8 +1042,6 @@ handle_archive(const char* filename)
       break;
   }
 
-  move(LINES - 1, 0);
-  clrtoeol();
   move(LINES - 1, 0);
   clrtoeol();
   refresh();
