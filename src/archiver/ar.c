@@ -119,7 +119,6 @@ extract(const char* filename, const char* output_dir, int show_contents)
     } else {
       if (path)
         strncpy(clean_path, path, sizeof(clean_path) - 1);
-      __path_R(clean_path, "t");
     }
 
     char fullpath[2048] = { 0 };

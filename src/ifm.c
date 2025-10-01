@@ -1681,7 +1681,7 @@ __paste()
   if (fail == 0) {
     mvprintw(LINES - 1,
              0,
-             "Pasted %d items%s",
+             "pasted %d items%s",
              ok,
              cut_items_present ? " (cut items removed)" : "");
     list(path, NULL, false, false);
@@ -1693,3 +1693,4 @@ __paste()
   gtimeout(500);
   list(path, NULL, false, false);
 }
+
