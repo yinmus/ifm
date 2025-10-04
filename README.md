@@ -29,10 +29,10 @@ ___
 
 ### Manual assembly:
 
-(Clone repo)
-
 ```
-make install clean
+$ git clone https://github.com/yinmus/ifm.git
+$ cd ifm
+# make install 
 ```
 ____
 
