@@ -27,7 +27,7 @@ ifm-ar "built-in" archiver, which can be used in a narrow way outside the file m
 </p>
 ___
 
-### Manual assembly:
+### installation:
 
 ```
 $ git clone https://github.com/yinmus/ifm.git
