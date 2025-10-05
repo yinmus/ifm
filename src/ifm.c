@@ -1,4 +1,3 @@
-
 #include "ifm.h"
 
 #include <assert.h>
@@ -541,7 +540,7 @@ ren(const char* filename)
 }
 
 void
-open_with(const char* filename)
+console(const char* filename)
 {
   char full_path[MAX_PATH];
   snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
@@ -553,53 +552,59 @@ open_with(const char* filename)
   }
 
   char command[MAX_PATH] = { 0 };
-  mvprintw(LINES - 1, 0, "open with: ");
-  clrtoeol();
-  refresh();
-
-  echo();
-  curs_set(1);
-  int pos = 0;
-  int ch;
-  while ((ch = getch()) != '\n' && ch != KEY_ENTER && ch != ESC) {
-    if (ch == KEY_BACKSPACE || ch == 127) {
-      if (pos > 0)
-        command[--pos] = '\0';
-    } else if (pos < MAX_PATH - 1) {
-      command[pos++] = ch;
-    }
-    mvprintw(LINES - 1, 11, "%s", command);
-    clrtoeol();
-    refresh();
-  }
-  noecho();
-  curs_set(0);
-
-  if (ch == ESC || pos == 0) {
+  if (!cpe(command, MAX_PATH, ":")) {
     line_clear(LINES - 1);
     refresh();
     return;
   }
 
-  int is_gui = (pos > 0 && command[pos - 1] == '&');
+  line_clear(LINES - 1);
+  refresh();
 
-  char full_command[MAX_PATH * 3];
-  snprintf(full_command, sizeof(full_command), "%s \"%s\"", command, full_path);
-
-  if (is_gui) {
-    system(full_command);
-  } else {
-    def_prog_mode();
-    endwin();
-    int ret = system(full_command);
-
-    reset_prog_mode();
-    refresh();
+  if (strlen(command) == 0) {
+    list(path, NULL, false, false);
+    return;
   }
 
+  char full_command[MAX_PATH * 3];
+  char* dollar_pos = strchr(command, '$');
+  char* nosel;
+
+  nosel = strstr(command, "%n");
+
+  if (dollar_pos != NULL) {
+    int prefix_len = dollar_pos - command;
+    char prefix[MAX_PATH];
+    char suffix[MAX_PATH];
+
+    strncpy(prefix, command, prefix_len);
+    prefix[prefix_len] = '\0';
+
+    strcpy(suffix, dollar_pos + 1);
+
+    snprintf(full_command,
+             sizeof(full_command),
+             "%s\"%s\"%s",
+             prefix,
+             full_path,
+             suffix);
+  } else if (nosel != NULL) {
+    size_t len = strlen("%n");
+    memmove(nosel, nosel + len, strlen(nosel + len) + 1);
+
+    snprintf(full_command, sizeof(full_command), "%s", command);
+  } else {
+    snprintf(
+      full_command, sizeof(full_command), "%s \"%s\"", command, full_path);
+  }
+  def_prog_mode();
+  endwin();
+
+  int pr = system(full_command);
+
+  reset_prog_mode();
   refresh();
   list(path, NULL, false, false);
-  ;
 }
 
 void
@@ -609,7 +614,7 @@ to_back()
 
   if (strcmp(path, "/") == 0) {
     line_clear(LINES - 1);
-    mvprintw(LINES - 1, 0, "Already at root directory");
+    mvprintw(LINES - 1, 0, "E: already at root directory");
     refresh();
     gtimeout(500);
     return;
@@ -880,58 +885,76 @@ search()
 }
 
 void
-search_DN()
+searchdn()
 {
   if (search_count == 0)
     return;
 
-  search_index++;
-  if (search_index >= search_count) {
-    search_index = 0;
+  int start_pos = selected + 1;
+  for (int i = start_pos; i < file_count; i++) {
+    for (int j = 0; j < search_count; j++) {
+      if (strcmp(files[i], search_results[j]) == 0) {
+        selected = i;
+        search_index = j;
+        goto ad_view;
+      }
+    }
   }
 
-  for (int i = 0; i < file_count; i++) {
-    if (strcmp(files[i], search_results[search_index]) == 0) {
-      selected = i;
-
-      int height = LINES - 4;
-      if (selected >= offset + height) {
-        offset = selected - height + 1;
+  for (int i = 0; i <= selected; i++) {
+    for (int j = 0; j < search_count; j++) {
+      if (strcmp(files[i], search_results[j]) == 0) {
+        selected = i;
+        search_index = j;
+        goto ad_view;
       }
-      if (selected < offset) {
-        offset = selected;
-      }
-
-      break;
     }
+  }
+
+ad_view:
+  int height = LINES - 4;
+  if (selected >= offset + height) {
+    offset = selected - height + 1;
+  }
+  if (selected < offset) {
+    offset = selected;
   }
 }
 
 void
-search_UP()
+searchup()
 {
   if (search_count == 0)
     return;
 
-  search_index--;
-  if (search_index < 0) {
-    search_index = search_count - 1;
+  int start_pos = selected - 1;
+  for (int i = start_pos; i >= 0; i--) {
+    for (int j = 0; j < search_count; j++) {
+      if (strcmp(files[i], search_results[j]) == 0) {
+        selected = i;
+        search_index = j;
+        goto ad_view;
+      }
+    }
   }
 
-  for (int i = 0; i < file_count; i++) {
-    if (strcmp(files[i], search_results[search_index]) == 0) {
-      selected = i;
-
-      int height = LINES - 4;
-      if (selected >= offset + height) {
-        offset = selected - height + 1;
+  for (int i = file_count - 1; i >= selected; i--) {
+    for (int j = 0; j < search_count; j++) {
+      if (strcmp(files[i], search_results[j]) == 0) {
+        selected = i;
+        search_index = j;
+        goto ad_view;
       }
-      if (selected < offset) {
-        offset = selected;
-      }
-
-      break;
     }
+  }
+
+ad_view:
+  int height = LINES - 4;
+  if (selected >= offset + height) {
+    offset = selected - height + 1;
+  }
+  if (selected < offset) {
+    offset = selected;
   }
 }
 
@@ -1693,4 +1716,3 @@ __paste()
   gtimeout(500);
   list(path, NULL, false, false);
 }
-

@@ -214,8 +214,8 @@ main(int argc, char* argv[])
           break;
 
         case CONTROL('o'):
-        case k_openwith:
-          __OPEN_WITH;
+        case k_console:
+          __CONSOLE;
           break;
 
         case k_markfmenu:
@@ -265,24 +265,22 @@ main(int argc, char* argv[])
           __VI;
           break;
 
-          if (RK) {
-            case k_rk:
-              line_clear(LINES - 1);
-              mvwprintw(stdscr, LINES - 1, 0, "reset 'b'uffer | 't'erminal");
-              ch = getch();
-              if (ch == 'b') {
-                cp_buff_count = 0;
-                line_clear(LINES - 1);
-                mvwprintw(stdscr, LINES - 1, 0, "reset copy buffer");
-                gtimeout(500);
-              } else if (ch == 't') {
-                reset_terminal(0);
-                list(path, NULL, false, false);
-                line_clear(LINES - 1);
-                mvwprintw(stdscr, LINES - 1, 0, "terminal reset");
-                gtimeout(500);
-                break;
-              }
+        case k_rk:
+          line_clear(LINES - 1);
+          mvwprintw(stdscr, LINES - 1, 0, "reset 'b'uffer | 't'erminal");
+          ch = getch();
+          if (ch == 'b') {
+            cp_buff_count = 0;
+            line_clear(LINES - 1);
+            mvwprintw(stdscr, LINES - 1, 0, "reset copy buffer");
+            gtimeout(500);
+          } else if (ch == 't') {
+            reset_terminal(0);
+            list(path, NULL, false, false);
+            line_clear(LINES - 1);
+            mvwprintw(stdscr, LINES - 1, 0, "terminal reset");
+            gtimeout(500);
+            break;
           }
         case k_showpath:
           line_clear(LINES - 1);
@@ -290,15 +288,11 @@ main(int argc, char* argv[])
           gtimeout(2000);
           break;
 
-          //       case 'a':
-          //         list(path, NULL, false, true); Пока тесты
-          //         break;
-
         case k_Nsearch:
-          search_UP();
+          searchup();
           break;
         case k_nsearch:
-          search_DN();
+          searchdn();
           break;
       }
     }

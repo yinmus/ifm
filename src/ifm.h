@@ -34,8 +34,6 @@ extern MarkedFile marked_files[MAX_FILES];
 
 extern int last_clicked;
 
-extern char** environ;
-
 extern int sd;
 
 #ifndef MOUSE_BTNS
@@ -70,7 +68,7 @@ cr_dir();
 void
 ren(const char* filename);
 void
-open_with(const char* filename);
+console(const char* filename);
 void
 to_back();
 void
@@ -98,9 +96,9 @@ search();
 void
 vi();
 void
-search_UP();
+searchup();
 void
-search_DN();
+searchdn();
 
 #define DIRT(path)                                                             \
   ({                                                                           \
@@ -152,7 +150,7 @@ search_DN();
 #define __MAKE_DIR __make_dir()
 #define __MAKE_FILE __make_file()
 #define __RENAME __rename()
-#define __OPEN_WITH open_with(files[selected])
+#define __CONSOLE console(files[selected])
 #define __MARK_FILES_MENU show_marked_files()
 #define __HANDLE_MARKED_FILES mark_help()
 #define __PGUP_HANDLE __PG_scrl_up()

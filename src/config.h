@@ -4,7 +4,6 @@
 /*asci table ) */
 
 /*other*/
-#define RK false
 #define ESC 27
 #define F(n) (KEY_F(n))
 #define TAB '\t'
@@ -32,7 +31,7 @@
 #define k_mkfile 116      // key t
 #define k_rename 114      // key r
 #define k_prev 45         // key .
-#define k_openwith 111    // key o
+#define k_console 111     // key o
 #define k_markfmenu 77    // key M
 #define k_markmhandle 101 // key e
 #define k_update F(5)     // key f5
