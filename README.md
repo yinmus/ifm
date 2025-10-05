@@ -14,18 +14,15 @@ ____
 
 ___
 
-<p>
-  <H3> created for fast file management </H3>  
-</p>
 
-___
+**created for fast file management.**
 
-<p>
-
-ifm-ar "built-in" archiver, which can be used in a narrow way outside the file manager
+**ifm have ifm-ar - built-in archiver, which can be used in a narrow way outside the file manager**
 
 </p>
-___
+
+**[DOCS](docs/)** 
+(in ifm/docs/)
 
 ### installation:
 
@@ -43,4 +40,4 @@ ___
 
 
 
-###### [LICENSE](LICENSE) : [GPLv3](https://www.gnu.org/licenses/gpl-3.0.ru.html)
+###### [LICENSE: GPLv3](https://www.gnu.org/licenses/gpl-3.0.ru.html)
