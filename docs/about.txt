@@ -1,0 +1,82 @@
+ifm — File Manager
+
+ifm is a file manager designed for quickly moving between files and managing them. The program comes with an archive handler that allows you to work with a large number of popular archive types quickly, although not always perfectly.
+
+Despite its small size, the program has very good functionality, such as a large number of hotkeys:
+(only the default keys will be mentioned below — you can customize them)
+
+Movement / Navigation:
+
+Of course, you can move up and down through files.
+(For the next 4, you can use the corresponding arrows):
+
+k -> to the file above
+
+j -> to the file below
+
+(A slash will indicate an alternative key for this action)
+
+l / Enter -> if it is a file, open it; if it is a directory, go to it
+
+h -> go to the directory above
+
+pgdn / ^d -> page down
+
+pgup / ^u -> page up
+
+(A plus sign will indicate key combinations)
+
+G -> go to the last file
+
+g + g -> go to the first file
+
+{n} + j -> move down {n} files
+
+{n} + k -> move up {n} files
+
+(If you have used vim, you will have no trouble understanding how hotkeys and commands work.)
+
+- -> go to the previous directory (aka cd -)
+
+Goto mode:
+
+There is a goto mode that helps you quickly navigate through root directories.
+g -> Enter goto mode.
+Next, you will see a prompt window.
+
+File operations:
+
+o -> Open the console described in console.txt
+r -> Rename the current file
+x -> Delete the current file
+m -> Create a directory
+t -> Create a file
+
+Copy / Paste / Cut:
+
+c+x -> Cut the current file
+y+y -> Copy the current file
+p -> Paste files from the buffer 
+r+b -> Clear the buffer (delete all copied and cut files)
+
+Marking:
+
+(This mode is similar to selecting files in graphical file managers)
+
+(Marked with a red * before the file name) 
+
+v -> Mark the current file
+M -> List of marked files
+e -> Enter marking mode
+(As with goto, a hint window appears)
+
+Other:
+
+q -> Exit ifm
+^h/. -> Show/Hide files beginning with .
+/ -> Search
+n -> After you have used the search, you can use n to move through the found files
+N -> Move backwards through the found files
+:/; -> Command mode (not described in detail, but described in commands.txt)
+f5 -> Refresh screen
+, -> Show absolute path

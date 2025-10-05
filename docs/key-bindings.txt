@@ -30,7 +30,7 @@
              gu    cd /usr/
 
 
-       <C-o>, o    open with
+       <C-o>, o    console  
               r    rename
          del, x    del
              cx    cut
@@ -66,4 +66,4 @@
                 
               ,    show absolute path
 
-
+edit: ifm/src/config.h
