@@ -18,7 +18,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
+#include <sys/wait.h> 
 #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -543,12 +543,14 @@ void
 console(const char* filename)
 {
   char full_path[MAX_PATH];
+  bool nfile = 1;
   snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
 
-  if (access(full_path, R_OK) != 0) {
-    mvprintw(LINES - 1, 0, "E: Cannot access file");
-    gtimeout(1000);
-    return;
+  nfile = nfile && (access(full_path, R_OK) != 0);
+  if (nfile) {
+    mvprintw(LINES -1, 0, "w: cannot access file, %d [press enter]", nfile);
+    gtimeout(10000);
+    
   }
 
   char command[MAX_PATH] = { 0 };
@@ -572,7 +574,7 @@ console(const char* filename)
 
   nosel = strstr(command, "%n");
 
-  if (dollar_pos != NULL) {
+  if (dollar_pos != NULL || nfile == 0) {
     int prefix_len = dollar_pos - command;
     char prefix[MAX_PATH];
     char suffix[MAX_PATH];
@@ -588,11 +590,14 @@ console(const char* filename)
              prefix,
              full_path,
              suffix);
-  } else if (nosel != NULL) {
+      } else if (nosel != NULL) {
     size_t len = strlen("%n");
     memmove(nosel, nosel + len, strlen(nosel + len) + 1);
 
     snprintf(full_command, sizeof(full_command), "%s", command);
+  } else if (nfile){
+    snprintf(
+      full_command, sizeof(full_command), "%s", command);
   } else {
     snprintf(
       full_command, sizeof(full_command), "%s \"%s\"", command, full_path);
