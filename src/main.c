@@ -272,7 +272,7 @@ main(int argc, char* argv[])
           if (ch == 'b') {
             cp_buff_count = 0;
             line_clear(LINES - 1);
-            mvwprintw(stdscr, LINES - 1, 0, "reset copy buffer");
+            mvwprintw(stdscr, LINES - 1, 0, "reset copy buff");
             gtimeout(500);
           } else if (ch == 't') {
             reset_terminal(0);

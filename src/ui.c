@@ -17,7 +17,6 @@
 #include "./icons/icons.h"
 #include "ifm.h"
 
-#
 #define MAX_COLORS 256
 static char* color_pairs[MAX_COLORS] = { 0 };
 static int next_color_pair = 20;
@@ -145,9 +144,9 @@ display_file_info(const struct stat* st,
   attroff(COLOR_PAIR(1));
 
   attron(COLOR_PAIR(4));
-  char info_buffer[256];
-  snprintf(info_buffer,
-           sizeof(info_buffer),
+  char info_buff[256];
+  snprintf(info_buff,
+           sizeof(info_buff),
            "%ld %s %s %.0f%s %s",
            st->st_nlink,
            pw ? pw->pw_name : "?",
@@ -155,7 +154,7 @@ display_file_info(const struct stat* st,
            size,
            un,
            date);
-  printw("%s", info_buffer);
+  printw("%s", info_buff);
   attroff(COLOR_PAIR(4));
 
   int percentage = (file_count > 1) ? (selected * 100) / (file_count - 1) : 0;
@@ -197,7 +196,7 @@ display_file_info(const struct stat* st,
     if (len != -1) {
       link_target[len] = '\0';
 
-      int info_len = strlen(perms) + 1 + strlen(info_buffer);
+      int info_len = strlen(perms) + 1 + strlen(info_buff);
       int pos_info_len = strlen(position_info);
       int available_space = COLS - info_len - pos_info_len - 5;
 
@@ -222,7 +221,7 @@ display_file_info(const struct stat* st,
 
   char hidden_set[64];
 
-  if (s_hidden == 0) {
+  if (show_hidden == 0) {
     strcpy(hidden_set, "H");
   } else {
     strcpy(hidden_set, " ");

@@ -19,7 +19,7 @@ extern char** files;
 extern int file_count, selected, offset;
 extern char path[MAX_PATH];
 extern char lpath[MAX_PATH];
-extern int s_hidden;
+extern int show_hidden;
 
 extern char cp_buff[MAX_COPY_FILES][MAX_PATH];
 extern int cp_buff_count;
@@ -33,8 +33,7 @@ typedef struct
 extern MarkedFile marked_files[MAX_FILES];
 
 extern int last_clicked;
-
-extern int sd;
+extern bool sd;
 
 #ifndef MOUSE_BTNS
 
@@ -78,7 +77,7 @@ show_marked_files();
 void
 mark_help();
 int
-cpe(char* buffer, int max_len, const char* prompt);
+cpe(char* buff, int max_len, const char* prompt);
 int
 confrim_delete(const char* filename);
 void
