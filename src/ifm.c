@@ -43,8 +43,9 @@ int offset = 0;
 char path[MAX_PATH];
 char lpath[MAX_PATH];
 
-int s_hidden = 0;
-int sd = 1;
+int show_hidden = 0;
+bool sd = 1;
+
 MarkedFile marked_files[MAX_FILES] = { 0 };
 void
 init_files()
@@ -132,7 +133,7 @@ list(const char* dir_path, const char* filter, bool show_dirs, bool show_files)
     if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
       continue;
 
-    if (!s_hidden && entry->d_name[0] == '.')
+    if (!show_hidden && entry->d_name[0] == '.')
       continue;
 
     char full_path[MAX_PATH];
@@ -539,76 +540,129 @@ ren(const char* filename)
   }
 }
 
-void
-console(const char* filename)
-{
-  char full_path[MAX_PATH];
-  bool nfile = 1;
-  snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
-
-  nfile = nfile && (access(full_path, R_OK) != 0);
-  if (nfile) {
-    mvprintw(LINES -1, 0, "w: cannot access file, %d [press enter]", nfile);
-    gtimeout(10000);
-    
+void sharg(const char* input, char* output, size_t len) {
+  assert(input != NULL);
+  assert(output != NULL);
+  assert(len > 0);
+  
+  size_t j = 0;
+  for (size_t i = 0; input[i] != '\0' && j < len - 1; i++) {
+    char c = input[i];
+    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == '!') {
+      if (j < len - 2) {
+        output[j++] = '\\';
+      }
+    }
+    output[j++] = c;
   }
+  output[j] = '\0';
+}
 
-  char command[MAX_PATH] = { 0 };
+void console(const char* filename) {
+  assert(filename != NULL);
+  assert(path != NULL);
+  
+  char full_path[MAX_PATH];
+  bool nfile = (access(full_path, R_OK) != 0);
+  
+  snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
+  nfile = (access(full_path, R_OK) != 0);
+  
+  if (nfile) {
+    mvprintw(LINES - 1, 0, "w: cannot access file, %d [press enter]", nfile);
+    gtimeout(10000);
+  }
+  
+  char command[MAX_PATH] = {0};
   if (!cpe(command, MAX_PATH, ":")) {
     line_clear(LINES - 1);
     refresh();
     return;
   }
-
+  
   line_clear(LINES - 1);
   refresh();
-
+  
   if (strlen(command) == 0) {
     list(path, NULL, false, false);
     return;
   }
-
-  char full_command[MAX_PATH * 3];
-  char* dollar_pos = strchr(command, '$');
-  char* nosel;
-
-  nosel = strstr(command, "%n");
-
-  if (dollar_pos != NULL || nfile == 0) {
-    int prefix_len = dollar_pos - command;
-    char prefix[MAX_PATH];
-    char suffix[MAX_PATH];
-
-    strncpy(prefix, command, prefix_len);
-    prefix[prefix_len] = '\0';
-
-    strcpy(suffix, dollar_pos + 1);
-
-    snprintf(full_command,
-             sizeof(full_command),
-             "%s\"%s\"%s",
-             prefix,
-             full_path,
-             suffix);
-      } else if (nosel != NULL) {
+  
+  size_t cmd_len = strlen(command);
+  assert(cmd_len < MAX_PATH);
+  
+  char full_cmd[MAX_PATH * 2];
+  memset(full_cmd, 0, sizeof(full_cmd));
+  
+  char* dpos = strchr(command, '$');
+  char* npos = strstr(command, "%n");
+  
+  if (npos != NULL) {
     size_t len = strlen("%n");
-    memmove(nosel, nosel + len, strlen(nosel + len) + 1);
-
-    snprintf(full_command, sizeof(full_command), "%s", command);
-  } else if (nfile){
-    snprintf(
-      full_command, sizeof(full_command), "%s", command);
-  } else {
-    snprintf(
-      full_command, sizeof(full_command), "%s \"%s\"", command, full_path);
+    size_t offset = npos - command;
+    
+    assert(offset + len <= cmd_len);
+    
+    size_t remaining = cmd_len - offset - len;
+    if (remaining > 0) {
+      memmove(npos, npos + len, remaining + 1);
+    } else {
+      *npos = '\0';
+    }
+    
+    size_t new_len = strlen(command);
+    assert(new_len < sizeof(full_cmd));
+    
+    snprintf(full_cmd, sizeof(full_cmd), "%s", command);
   }
+  else if (dpos != NULL) {
+    int plen = dpos - command;
+    assert(plen >= 0 && plen < MAX_PATH);
+    
+    char pre[MAX_PATH];
+    char suf[MAX_PATH];
+    char escaped_path[MAX_PATH * 2];
+    
+    sharg(full_path, escaped_path, sizeof(escaped_path));
+    
+    strncpy(pre, command, plen);
+    pre[plen] = '\0';
+    
+    if (*(dpos + 1) != '\0') {
+      strncpy(suf, dpos + 1, sizeof(suf) - 1);
+      suf[sizeof(suf) - 1] = '\0';
+    } else {
+      suf[0] = '\0';
+    }
+    
+    size_t total_len = strlen(pre) + strlen(escaped_path) + strlen(suf) + 3;
+    assert(total_len < sizeof(full_cmd));
+    
+    snprintf(full_cmd, sizeof(full_cmd), "%s\"%s\"%s", pre, escaped_path, suf);
+  }
+  else if (nfile) {
+    assert(cmd_len < sizeof(full_cmd));
+    snprintf(full_cmd, sizeof(full_cmd), "%s", command);
+  }
+  else {
+    char escaped_path[MAX_PATH * 2];
+    sharg(full_path, escaped_path, sizeof(escaped_path));
+    
+    size_t total_len = cmd_len + strlen(escaped_path) + 4;
+    assert(total_len < sizeof(full_cmd));
+    
+    snprintf(full_cmd, sizeof(full_cmd), "%s \"%s\"", command, escaped_path);
+  }
+  
+  assert(strlen(full_cmd) > 0);
+  assert(strlen(full_cmd) < sizeof(full_cmd));
+  
   def_prog_mode();
   endwin();
-
-  int pr = system(full_command);
-
+  int pr = system(full_cmd);
   reset_prog_mode();
   refresh();
+  
   list(path, NULL, false, false);
 }
 
@@ -690,95 +744,135 @@ to_home()
     selected = 0;
     offset = 0;
   } else {
-    mvprintw(LINES - 1, 0, "E: HOME environment variable not set");
+    mvprintw(LINES - 1, 0, "e: HOME environment variable not set");
     refresh();
     gtimeout(500);
   }
 }
 
-int
-cpe(char* buffer, int max_len, const char* prompt)
-{
+int chrlen(unsigned char c) {
+  if ((c & 0x80) == 0) return 1;      // 0xxxxxxx
+  if ((c & 0xE0) == 0xC0) return 2;   // 110xxxxx
+  if ((c & 0xF0) == 0xE0) return 3;   // 1110xxxx
+  if ((c & 0xF8) == 0xF0) return 4;   // 11110xxx
+  return 1; 
+}
+
+int chrcnt(const char* buff, int bytepos) {
+  int chars = 0;
+  for (int i = 0; i < bytepos; i++) {
+    if ((buff[i] & 0xC0) != 0x80) {
+      chars++;
+    }
+  }
+  return chars;
+}
+
+int cpe(char* buff, int max_len, const char* prompt) {
   echo();
   curs_set(1);
-
-  int pos = strlen(buffer);
-
+  int pos = strlen(buff);
+  
   while (1) {
-    line_clear(LINES - 1);
+    move(LINES - 1, 0);
     clrtoeol();
-    mvprintw(LINES - 1, 0, "%s%s", prompt, buffer);
-
-    int cursor_pos = 0;
-    for (int i = 0; i < pos; i++) {
-      if ((buffer[i] & 0xC0) != 0x80) {
-        cursor_pos++;
-      }
-    }
+    mvprintw(LINES - 1, 0, "%s%s", prompt, buff);
+    
+    int cursor_pos = chrcnt(buff, pos);
     move(LINES - 1, strlen(prompt) + cursor_pos);
     refresh();
-
+    
     int ch = getch();
-
+    
     if (ch == '\n' || ch == KEY_ENTER) {
       break;
-    } else if (ch == ESC) {
+    } 
+    else if (ch == ESC) {
       noecho();
       curs_set(0);
       return 0;
-    } else if (ch == 127 || ch == KEY_BACKSPACE) {
+    }
+    else if (ch == 127 || ch == KEY_BACKSPACE) {
       if (pos > 0) {
         int char_len = 1;
-        while (pos - char_len >= 0 && (buffer[pos - char_len] & 0xC0) == 0x80) {
+        pos--;
+        while (pos > 0 && (buff[pos] & 0xC0) == 0x80) {
+          pos--;
           char_len++;
         }
-        pos -= char_len;
-        memmove(&buffer[pos],
-                &buffer[pos + char_len],
-                strlen(buffer) - pos - char_len + 1);
+        memmove(&buff[pos], &buff[pos + char_len], 
+                strlen(buff) - pos - char_len + 1);
       }
-    } else if (ch == KEY_DC) {
-      if (pos < strlen(buffer)) {
-        int char_len = 1;
-        while ((buffer[pos + char_len] & 0xC0) == 0x80) {
-          char_len++;
-        }
-        memmove(&buffer[pos],
-                &buffer[pos + char_len],
-                strlen(buffer) - pos - char_len + 1);
+    }
+    else if (ch == KEY_DC) {
+      if (pos < strlen(buff)) {
+        int char_len = chrlen((unsigned char)buff[pos]);
+        memmove(&buff[pos], &buff[pos + char_len],
+                strlen(buff) - pos - char_len + 1);
       }
-    } else if (ch == KEY_LEFT) {
+    }
+    else if (ch == 11) { // Ctrl+K
+      buff[pos] = '\0';
+    }
+    else if (ch == 21) { // Ctrl+U
+      int len = strlen(buff);
+      memmove(buff, &buff[pos], len - pos + 1);
+      pos = 0;
+    }
+    else if (ch == KEY_LEFT) {
       if (pos > 0) {
         do {
           pos--;
-        } while (pos > 0 && (buffer[pos] & 0xC0) == 0x80);
+        } while (pos > 0 && (buff[pos] & 0xC0) == 0x80);
       }
-    } else if (ch == KEY_RIGHT) {
-      if (pos < strlen(buffer)) {
+    }
+    else if (ch == KEY_RIGHT) {
+      if (pos < strlen(buff)) {
         do {
           pos++;
-        } while (pos < strlen(buffer) && (buffer[pos] & 0xC0) == 0x80);
+        } while (pos < strlen(buff) && (buff[pos] & 0xC0) == 0x80);
       }
-    } else if (ch == 23) {
+    }
+    else if (ch == 23) { // Ctrl+W
       if (pos > 0) {
         int word_start = pos;
-        while (word_start > 0 && buffer[word_start - 1] == ' ') {
+        while (word_start > 0 && buff[word_start - 1] == ' ') {
           word_start--;
         }
-        while (word_start > 0 && buffer[word_start - 1] != ' ') {
+        while (word_start > 0 && buff[word_start - 1] != ' ') {
           word_start--;
         }
-        memmove(&buffer[word_start], &buffer[pos], strlen(buffer) - pos + 1);
+        memmove(&buff[word_start], &buff[pos], strlen(buff) - pos + 1);
         pos = word_start;
       }
-    } else if (ch >= 32 && ch <= 126 || ch >= 128) {
-      if (strlen(buffer) < max_len - 1) {
-        memmove(&buffer[pos + 1], &buffer[pos], strlen(buffer) - pos + 1);
-        buffer[pos++] = ch;
+    }
+    else if (ch >= 32 && ch <= 126 || ch >= 128) {
+      int char_len = 1;
+      unsigned char first_byte = (unsigned char)ch;
+      
+      if ((first_byte & 0x80) != 0) {
+        char_len = chrlen(first_byte);
+        
+        if (strlen(buff) + char_len < max_len) {
+          memmove(&buff[pos + char_len], &buff[pos], 
+                  strlen(buff) - pos + 1);
+          
+          buff[pos++] = ch;
+          
+          for (int i = 1; i < char_len; i++) {
+            int next_ch = getch();
+            buff[pos++] = next_ch;
+          }
+        }
+      } else {
+        if (strlen(buff) < max_len - 1) {
+          memmove(&buff[pos + 1], &buff[pos], strlen(buff) - pos + 1);
+          buff[pos++] = ch;
+        }
       }
     }
   }
-
+  
   noecho();
   curs_set(0);
   return 1;
@@ -859,7 +953,7 @@ search()
               strcmp(entry->d_name, "..") == 0)
             continue;
 
-          if (!s_hidden && entry->d_name[0] == '.')
+          if (!show_hidden && entry->d_name[0] == '.')
             continue;
 
           if (CASE_INSENSITIVE_STRSTR(entry->d_name, filter)) {
@@ -1250,7 +1344,7 @@ __hidden_files()
     strncpy(prev_file, files[prev_selected], MAX_PATH);
   }
 
-  s_hidden = !s_hidden;
+  show_hidden = !show_hidden;
   list(path, NULL, false, false);
   ;
 
@@ -1529,7 +1623,7 @@ __cut()
         for (int i = 0; i < cp_buff_count; i++) {
           if (strcmp(cp_buff[i], full_path) == 0) {
             line_clear(LINES - 1);
-            mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
+            mvprintw(LINES - 1, 0, "[E:02] Already in buff");
             refresh();
             gtimeout(800);
             return;
@@ -1538,7 +1632,7 @@ __cut()
 
         if (cp_buff_count >= MAX_COPY_FILES) {
           line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
+          mvprintw(LINES - 1, 0, "[E:03] buff full (%d)", MAX_COPY_FILES);
           refresh();
           gtimeout(500);
           return;
@@ -1615,7 +1709,7 @@ __copy()
         for (int i = 0; i < cp_buff_count; i++) {
           if (strcmp(cp_buff[i], full_path) == 0) {
             line_clear(LINES - 1);
-            mvprintw(LINES - 1, 0, "[E:02] Already in buffer");
+            mvprintw(LINES - 1, 0, "[E:02] Already in buff");
             refresh();
             gtimeout(800);
             return;
@@ -1624,7 +1718,7 @@ __copy()
 
         if (cp_buff_count >= MAX_COPY_FILES) {
           line_clear(LINES - 1);
-          mvprintw(LINES - 1, 0, "[E:03] Buffer full (%d)", MAX_COPY_FILES);
+          mvprintw(LINES - 1, 0, "[E:03] buff full (%d)", MAX_COPY_FILES);
           refresh();
           gtimeout(500);
           return;
@@ -1652,7 +1746,7 @@ __paste()
 {
   if (cp_buff_count == 0) {
     line_clear(LINES - 1);
-    mvprintw(LINES - 1, 0, "[E:04] Buffer empty");
+    mvprintw(LINES - 1, 0, "[E:04] buff empty");
     refresh();
     gtimeout(500);
     return;
