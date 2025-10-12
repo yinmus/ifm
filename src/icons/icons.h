@@ -17,7 +17,7 @@ IconResult
 icon_ext(const char* extension)
 {
   for (size_t i = 0;
-       i < sizeof(extension_mappings) / sizeof(extension_mappings[0]);
+       i < sizeof(extlen);
        i++) {
     if (!strcasecmp(extension, extension_mappings[i].extension)) {
       return (IconResult){ extension_mappings[i].icon,
@@ -31,7 +31,7 @@ IconResult
 icon_filename(const char* filename)
 {
   for (size_t i = 0;
-       i < sizeof(filename_mappings) / sizeof(filename_mappings[0]);
+       i < fnlen;
        i++) {
     if (!strcasecmp(filename, filename_mappings[i].filename)) {
       return (IconResult){ filename_mappings[i].icon,
@@ -41,5 +41,5 @@ icon_filename(const char* filename)
 
   return (IconResult){ "", "#6D8086" };
 }
-/**/
+
 #endif
