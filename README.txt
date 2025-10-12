@@ -30,6 +30,9 @@ About hotkeys:
 installation:
 $ git clone https://github.com/yinmus/ifm.git
 $ cd ifm
-# make install
+# make install 
+if you want to remove icons (and reduce the size of the binary file):
+# make install clean NOICONS=1   
+
 
 LICENSE: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.ru.html)
