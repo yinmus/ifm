@@ -1,12 +1,24 @@
-ifm - is a lightweight file manager that focuses on speed of use.
+
+ifm is a lightweight file manager focused on speed.
 =================================================================
 It has many hotkeys that can be customized (src/config.h). There are icons that can be disabled:
-[optimal]:
-*change the value of the sd variable in src/ifm.c
-[or a less optimal option:]
-*open the command mode every time after startup and type ‘set sd 1’
+When compiling: *icons will not be available at all
+make install NOICONS=1
+During program execution:
+*in command mode
+:set sd 0
+    *Specify the default value of the sd variable:
+    *in the file /src/ifm.c, change the value of the sd variable 
+
 ===================================================================
-It also has a built-in archiver, which makes it easier to work with archives. You can view the list of files and unzip them.
+It also has a built-in archiver that simplifies working with archives. You can view the list of files and unpack them.
+
+About hotkeys: 
+*docs/about.txt
+
+*About console mode:
+*docs/console.txt
+===================================================================
 
 About hotkeys: 
 *docs/about.txt
