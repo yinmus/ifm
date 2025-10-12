@@ -4,11 +4,18 @@
 PREFIX = /usr/bin
 
 CC = gcc
-CFLAGS = -O2
+CFLAGS = -O2 
 LDFLAGS = -lncursesw -ltinfo -lmagic
 
-SRC = src/fmh.c src/ifm.c src/main.c src/ui.c src/goto.c src/mark.c
-OBJ = $(SRC:src/%.c=src/%.o)  
+ifeq ($(NOICONS),1)
+CFLAGS += -DNOICONS
+$(info [*] Building without icons)
+else
+$(info [*] Building with icons)
+endif
+
+SRC = src/fmh.c src/ifm.c src/main.c src/ui.c src/goto.c src/mark.c src/icons/icons_extension.c src/icons/icons_filename.c
+OBJ = $(SRC:src/%.c=src/%.o)
 BIN = ifm
 
 AR_SRC = src/archiver/ar.c
