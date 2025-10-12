@@ -8,11 +8,11 @@ It has many hotkeys that can be customized (src/config.h). There are icons that 
 ===================================================================
 It also has a built-in archiver, which makes it easier to work with archives. You can view the list of files and unzip them.
 
-**About hotkeys: 
-*docs/about.txt***
+About hotkeys: 
+*docs/about.txt
 
-**About console mode:
-*docs/console.txt*** 
+*About console mode:
+*docs/console.txt
 ===================================================================
 
 installation:
