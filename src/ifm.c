@@ -559,111 +559,96 @@ void sharg(const char* input, char* output, size_t len) {
 }
 
 void console(const char* filename) {
-  assert(filename != NULL);
-  assert(path != NULL);
+    assert(filename != NULL); 
+    assert(path != NULL);
+
+    
+    struct {
+      char abspath[6];
+      char relpath[6];
+      char dirpath[6];
+      size_t abslen;
+      size_t rellen;
+      size_t dirlen;
+    } mods = {
+      "%a", 
+      "%r",
+      "%d",
+    };
   
-  char full_path[MAX_PATH];
-  bool nfile = (access(full_path, R_OK) != 0);
-  
-  snprintf(full_path, sizeof(full_path), "%s/%s", path, filename);
-  nfile = (access(full_path, R_OK) != 0);
-  
-  if (nfile) {
-    mvprintw(LINES - 1, 0, "w: cannot access file, %d [press enter]", nfile);
-    gtimeout(10000);
-  }
-  
-  char command[MAX_PATH] = {0};
-  if (!cpe(command, MAX_PATH, ":")) {
+    mods.abslen = strlen(mods.abspath);
+    mods.rellen = strlen(mods.relpath);
+    mods.dirlen = strlen(mods.dirpath);
+    
+    
+    char fpath[MAX_PATH];
+    snprintf(fpath, sizeof(fpath), "%s/%s", path, filename);
+    
+    char command[MAX_PATH] = {0};
+    char runtcmd[MAX_PATH] = {0};
+    
+    mvprintw(LINES - 1, 0, ":");
+    
+    if (!cpe(command, MAX_PATH, ":")) {
+        line_clear(LINES - 1);
+        refresh();
+        return;
+    }
+    
     line_clear(LINES - 1);
     refresh();
-    return;
-  }
-  
-  line_clear(LINES - 1);
-  refresh();
-  
-  if (strlen(command) == 0) {
+    
+    if (strlen(command) == 0) {
+        list(path, NULL, false, false);
+        return;
+    }
+
+    char *absptr;
+
+    if ((absptr = strstr(command, mods.abspath)) != NULL) {
+      while ((absptr = strstr(command, mods.abspath)) != NULL) {
+        memmove(absptr, absptr + mods.abslen, strlen(absptr + mods.abslen) + 1);
+        sins(command, fpath, absptr, strlen(fpath)); 
+      }
+    }
+
+    char *relptr;
+
+    if ((relptr = strstr(command, mods.relpath)) != NULL) {
+      while ((relptr = strstr(command, mods.relpath)) != NULL) {
+        memmove(relptr, relptr + mods.rellen, strlen(relptr + mods.rellen) + 1);
+        sins(command, filename, relptr, strlen(filename)); 
+      }
+    }
+
+
+    char *dirptr;
+
+    if ((dirptr = strstr(command, mods.dirpath)) != NULL) {
+      while ((dirptr = strstr(command, mods.dirpath)) != NULL) {
+        memmove(dirptr, dirptr + mods.dirlen, strlen(dirptr + mods.dirlen) + 1);
+        sins(command, path, dirptr, strlen(path)); 
+      }
+    }
+
+    sharg(command, runtcmd, sizeof(command));
+
+    def_prog_mode();
+    endwin();
+    
+    int pr = system(runtcmd);
+
+    reset_prog_mode();
+    refresh();
+    
     list(path, NULL, false, false);
-    return;
-  }
-  
-  size_t cmd_len = strlen(command);
-  assert(cmd_len < MAX_PATH);
-  
-  char full_cmd[MAX_PATH * 2];
-  memset(full_cmd, 0, sizeof(full_cmd));
-  
-  char* dpos = strchr(command, '$');
-  char* npos = strstr(command, "%n");
-  
-  if (npos != NULL) {
-    size_t len = strlen("%n");
-    size_t offset = npos - command;
     
-    assert(offset + len <= cmd_len);
-    
-    size_t remaining = cmd_len - offset - len;
-    if (remaining > 0) {
-      memmove(npos, npos + len, remaining + 1);
-    } else {
-      *npos = '\0';
+    if (pr != 0) {
+        mvprintw(LINES - 1, 0, "exit code %d [enter]", pr);
+        getch();
+        line_clear(LINES - 1);
+        refresh();
     }
-    
-    size_t new_len = strlen(command);
-    assert(new_len < sizeof(full_cmd));
-    
-    snprintf(full_cmd, sizeof(full_cmd), "%s", command);
-  }
-  else if (dpos != NULL) {
-    int plen = dpos - command;
-    assert(plen >= 0 && plen < MAX_PATH);
-    
-    char pre[MAX_PATH];
-    char suf[MAX_PATH];
-    char escaped_path[MAX_PATH * 2];
-    
-    sharg(full_path, escaped_path, sizeof(escaped_path));
-    
-    strncpy(pre, command, plen);
-    pre[plen] = '\0';
-    
-    if (*(dpos + 1) != '\0') {
-      strncpy(suf, dpos + 1, sizeof(suf) - 1);
-      suf[sizeof(suf) - 1] = '\0';
-    } else {
-      suf[0] = '\0';
-    }
-    
-    size_t total_len = strlen(pre) + strlen(escaped_path) + strlen(suf) + 3;
-    assert(total_len < sizeof(full_cmd));
-    
-    snprintf(full_cmd, sizeof(full_cmd), "%s\"%s\"%s", pre, escaped_path, suf);
-  }
-  else if (nfile) {
-    assert(cmd_len < sizeof(full_cmd));
-    snprintf(full_cmd, sizeof(full_cmd), "%s", command);
-  }
-  else {
-    char escaped_path[MAX_PATH * 2];
-    sharg(full_path, escaped_path, sizeof(escaped_path));
-    
-    size_t total_len = cmd_len + strlen(escaped_path) + 4;
-    assert(total_len < sizeof(full_cmd));
-    
-    snprintf(full_cmd, sizeof(full_cmd), "%s \"%s\"", command, escaped_path);
-  }
-  
-  assert(strlen(full_cmd) > 0);
-  assert(strlen(full_cmd) < sizeof(full_cmd));
-  
-  def_prog_mode();
-  endwin();
-  int pr = system(full_cmd);
-  reset_prog_mode();
-  refresh();
-  
-  list(path, NULL, false, false);
 }
 
 void
@@ -1815,3 +1800,13 @@ __paste()
   gtimeout(500);
   list(path, NULL, false, false);
 }
+
+int sins(char *str, const char *ins, char *pos, size_t inslen) {
+    if (pos != NULL) {
+        size_t tlen = strlen(pos); 
+        memmove(pos + inslen, pos, tlen + 1);  
+        memcpy(pos, ins, inslen);                  
+    }
+    return 0;
+}
+
