@@ -1,25 +1,18 @@
-console mode is needed for operations with external programs.
-After entering the mode using k_console (default: ‘o’), you can write almost anything, for example:
+console mode is necessary for working with external programs.
+After entering the mode using k_console (default: “o”).
 
-1. Create an archive of the current file:
-tar -cf name.tar $ -> will be executed as: tar -cf name.tar fullpath/to/file
+There are aliases in the command that can simplify writing the command:
+%a - Absolute path to the selected file
+%r - Relative path to the selected file
+%d - Absolute path to the current directory
 
-You can also create an archive from several files:
+In general, everything here is limited only by your imagination, but here is an example:
 
-tar -cf name.tar file1 file2 -> tar -cf name.tar fullpath/to/file1 fullpath/to/file2
+Create an archive of the current file:
+tar -cf %r.tar %r -> will be executed as: tar -cf filename.tar filename
 
-Mode logic: by default, after logging in, you write the name of the program, and this program opens the currently selected file, i.e.:
-{programm} {current_file}
-The file name is not required; if there is no specifier as described below, it will be automatically inserted at the end of the command,  and if you added the file name in this way:
-{programm} filename
-then the program will execute as follows:
-{programm} {filename} {current_filename}
-Therefore, it is not recommended to do this unless there are specific situations, such as creating an archive with the current file and some other file.
-If you write the modifier %n (the location of which is not important): 
-{programm} 
-in the above case, {programm} will simply be executed.
-If you write $ in the input, which means the name of the current file, then the program will not automatically put the current file at the end of the command, it will be something like this:
-{programm} {path/to/current_file_name}
-This may be necessary in cases such as the following:
-mv $ path/to/dir -> mv path/to/current_file_name path/to/dir 
-
+Meaning of the mode:
+The original idea: for example, you want to open a file by default using Enter / l or the mouse, but the file opens with the wrong program. You write specifically:
+{programm} {filename}
+In addition to this, you can also perform tasks that the file manager cannot do:
+create archives and more
