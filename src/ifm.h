@@ -35,6 +35,22 @@ extern MarkedFile marked_files[MAX_FILES];
 extern int last_clicked;
 extern bool sd;
 
+typedef struct
+{
+  const char* name;
+  size_t len;
+} Modifier;
+
+enum
+{
+  abspath = 0,
+  relpath = 1,
+  dirpath = 2,
+  modc, /* the number of modifiers is determined automatically */
+};
+
+extern char* sub[modc];
+
 #ifndef MOUSE_BTNS
 
 #define LMB BUTTON1_PRESSED // LEFT MOUSE BUTTON
@@ -67,7 +83,7 @@ cr_dir();
 void
 ren(const char* filename);
 void
-console(const char* filename);
+console(char* filename);
 void
 to_back();
 void
@@ -98,6 +114,8 @@ void
 searchup();
 void
 searchdn();
+int
+sins(char* str, const char* ins, char* pos, size_t inslen);
 
 #define DIRT(path)                                                             \
   ({                                                                           \

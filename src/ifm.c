@@ -18,7 +18,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h> 
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
@@ -540,11 +540,13 @@ ren(const char* filename)
   }
 }
 
-void sharg(const char* input, char* output, size_t len) {
+void
+sharg(const char* input, char* output, size_t len)
+{
   assert(input != NULL);
   assert(output != NULL);
   assert(len > 0);
-  
+
   size_t j = 0;
   for (size_t i = 0; input[i] != '\0' && j < len - 1; i++) {
     char c = input[i];
@@ -558,97 +560,81 @@ void sharg(const char* input, char* output, size_t len) {
   output[j] = '\0';
 }
 
-void console(const char* filename) {
-    assert(filename != NULL); 
-    assert(path != NULL);
+void
+console(char* filename)
+{
+  assert(filename != NULL);
+  assert(path != NULL);
 
-    
-    struct {
-      char abspath[6];
-      char relpath[6];
-      char dirpath[6];
-      size_t abslen;
-      size_t rellen;
-      size_t dirlen;
-    } mods = {
-      "%a", 
-      "%r",
-      "%d",
-    };
-  
-    mods.abslen = strlen(mods.abspath);
-    mods.rellen = strlen(mods.relpath);
-    mods.dirlen = strlen(mods.dirpath);
-    
-    
-    char fpath[MAX_PATH];
-    snprintf(fpath, sizeof(fpath), "%s/%s", path, filename);
-    
-    char command[MAX_PATH] = {0};
-    char runtcmd[MAX_PATH] = {0};
-    
-    mvprintw(LINES - 1, 0, ":");
-    
-    if (!cpe(command, MAX_PATH, ":")) {
-        line_clear(LINES - 1);
-        refresh();
-        return;
+  char fpath[MAX_PATH];
+  snprintf(fpath, sizeof(fpath), "%s/%s", path, filename);
+
+  char command[MAX_PATH] = { 0 };
+  char runtcmd[MAX_PATH] = { 0 };
+
+  static Modifier modifs[] = {
+    /*   index    mods.      len */
+    [abspath] = { "%a", 0 },
+    [relpath] = { "%r", 0 },
+    [dirpath] = { "%d", 0 },
+  };
+
+  /* modifier length entry */
+  for (int i = 0; i < modc; i++) {
+    if (modifs[i].len == 0) {
+      modifs[i].len = strlen(modifs[i].name);
     }
-    
+  }
+
+  char* sub[modc] = {
+    [abspath] = fpath,
+    [relpath] = filename,
+    [dirpath] = path,
+  };
+
+  if (!cpe(command, MAX_PATH, ":")) {
     line_clear(LINES - 1);
     refresh();
-    
-    if (strlen(command) == 0) {
-        list(path, NULL, false, false);
-        return;
-    }
+    return;
+  }
 
-    char *absptr;
+  line_clear(LINES - 1);
+  refresh();
 
-    if ((absptr = strstr(command, mods.abspath)) != NULL) {
-      while ((absptr = strstr(command, mods.abspath)) != NULL) {
-        memmove(absptr, absptr + mods.abslen, strlen(absptr + mods.abslen) + 1);
-        sins(command, fpath, absptr, strlen(fpath)); 
-      }
-    }
-
-    char *relptr;
-
-    if ((relptr = strstr(command, mods.relpath)) != NULL) {
-      while ((relptr = strstr(command, mods.relpath)) != NULL) {
-        memmove(relptr, relptr + mods.rellen, strlen(relptr + mods.rellen) + 1);
-        sins(command, filename, relptr, strlen(filename)); 
-      }
-    }
-
-
-    char *dirptr;
-
-    if ((dirptr = strstr(command, mods.dirpath)) != NULL) {
-      while ((dirptr = strstr(command, mods.dirpath)) != NULL) {
-        memmove(dirptr, dirptr + mods.dirlen, strlen(dirptr + mods.dirlen) + 1);
-        sins(command, path, dirptr, strlen(path)); 
-      }
-    }
-
-    sharg(command, runtcmd, sizeof(command));
-
-    def_prog_mode();
-    endwin();
-    
-    int pr = system(runtcmd);
-
-    reset_prog_mode();
-    refresh();
-    
+  if (strlen(command) == 0) {
     list(path, NULL, false, false);
-    
-    if (pr != 0) {
-        mvprintw(LINES - 1, 0, "exit code %d [enter]", pr);
-        getch();
-        line_clear(LINES - 1);
-        refresh();
+    return;
+  }
+
+  for (int i = 0; i < modc; i++) {
+    char* ptr;
+
+    if ((ptr = strstr(command, modifs[i].name)) != NULL) {
+      while ((ptr = strstr(command, modifs[i].name)) != NULL) {
+        memmove(ptr, ptr + modifs[i].len, strlen(ptr + modifs[i].len) + 1);
+        sins(command, sub[i], ptr, strlen(sub[i]));
+      }
     }
+  }
+
+  sharg(command, runtcmd, sizeof(command));
+
+  def_prog_mode();
+  endwin();
+
+  int pr = system(runtcmd);
+
+  reset_prog_mode();
+  refresh();
+
+  list(path, NULL, false, false);
+
+  if (pr != 0) {
+    mvprintw(LINES - 1, 0, "exit code %d [enter]", pr);
+    getch();
+    line_clear(LINES - 1);
+    refresh();
+  }
 }
 
 void
@@ -735,15 +721,23 @@ to_home()
   }
 }
 
-int chrlen(unsigned char c) {
-  if ((c & 0x80) == 0) return 1;      // 0xxxxxxx
-  if ((c & 0xE0) == 0xC0) return 2;   // 110xxxxx
-  if ((c & 0xF0) == 0xE0) return 3;   // 1110xxxx
-  if ((c & 0xF8) == 0xF0) return 4;   // 11110xxx
-  return 1; 
+int
+chrlen(unsigned char c)
+{
+  if ((c & 0x80) == 0)
+    return 1; // 0xxxxxxx
+  if ((c & 0xE0) == 0xC0)
+    return 2; // 110xxxxx
+  if ((c & 0xF0) == 0xE0)
+    return 3; // 1110xxxx
+  if ((c & 0xF8) == 0xF0)
+    return 4; // 11110xxx
+  return 1;
 }
 
-int chrcnt(const char* buff, int bytepos) {
+int
+chrcnt(const char* buff, int bytepos)
+{
   int chars = 0;
   for (int i = 0; i < bytepos; i++) {
     if ((buff[i] & 0xC0) != 0x80) {
@@ -753,31 +747,31 @@ int chrcnt(const char* buff, int bytepos) {
   return chars;
 }
 
-int cpe(char* buff, int max_len, const char* prompt) {
+int
+cpe(char* buff, int max_len, const char* prompt)
+{
   echo();
   curs_set(1);
   int pos = strlen(buff);
-  
+
   while (1) {
     move(LINES - 1, 0);
     clrtoeol();
     mvprintw(LINES - 1, 0, "%s%s", prompt, buff);
-    
+
     int cursor_pos = chrcnt(buff, pos);
     move(LINES - 1, strlen(prompt) + cursor_pos);
     refresh();
-    
+
     int ch = getch();
-    
+
     if (ch == '\n' || ch == KEY_ENTER) {
       break;
-    } 
-    else if (ch == ESC) {
+    } else if (ch == ESC) {
       noecho();
       curs_set(0);
       return 0;
-    }
-    else if (ch == 127 || ch == KEY_BACKSPACE) {
+    } else if (ch == 127 || ch == KEY_BACKSPACE) {
       if (pos > 0) {
         int char_len = 1;
         pos--;
@@ -785,40 +779,34 @@ int cpe(char* buff, int max_len, const char* prompt) {
           pos--;
           char_len++;
         }
-        memmove(&buff[pos], &buff[pos + char_len], 
-                strlen(buff) - pos - char_len + 1);
+        memmove(
+          &buff[pos], &buff[pos + char_len], strlen(buff) - pos - char_len + 1);
       }
-    }
-    else if (ch == KEY_DC) {
+    } else if (ch == KEY_DC) {
       if (pos < strlen(buff)) {
         int char_len = chrlen((unsigned char)buff[pos]);
-        memmove(&buff[pos], &buff[pos + char_len],
-                strlen(buff) - pos - char_len + 1);
+        memmove(
+          &buff[pos], &buff[pos + char_len], strlen(buff) - pos - char_len + 1);
       }
-    }
-    else if (ch == 11) { // Ctrl+K
+    } else if (ch == 11) { // Ctrl+K
       buff[pos] = '\0';
-    }
-    else if (ch == 21) { // Ctrl+U
+    } else if (ch == 21) { // Ctrl+U
       int len = strlen(buff);
       memmove(buff, &buff[pos], len - pos + 1);
       pos = 0;
-    }
-    else if (ch == KEY_LEFT) {
+    } else if (ch == KEY_LEFT) {
       if (pos > 0) {
         do {
           pos--;
         } while (pos > 0 && (buff[pos] & 0xC0) == 0x80);
       }
-    }
-    else if (ch == KEY_RIGHT) {
+    } else if (ch == KEY_RIGHT) {
       if (pos < strlen(buff)) {
         do {
           pos++;
         } while (pos < strlen(buff) && (buff[pos] & 0xC0) == 0x80);
       }
-    }
-    else if (ch == 23) { // Ctrl+W
+    } else if (ch == 23) { // Ctrl+W
       if (pos > 0) {
         int word_start = pos;
         while (word_start > 0 && buff[word_start - 1] == ' ') {
@@ -830,20 +818,18 @@ int cpe(char* buff, int max_len, const char* prompt) {
         memmove(&buff[word_start], &buff[pos], strlen(buff) - pos + 1);
         pos = word_start;
       }
-    }
-    else if (ch >= 32 && ch <= 126 || ch >= 128) {
+    } else if (ch >= 32 && ch <= 126 || ch >= 128) {
       int char_len = 1;
       unsigned char first_byte = (unsigned char)ch;
-      
+
       if ((first_byte & 0x80) != 0) {
         char_len = chrlen(first_byte);
-        
+
         if (strlen(buff) + char_len < max_len) {
-          memmove(&buff[pos + char_len], &buff[pos], 
-                  strlen(buff) - pos + 1);
-          
+          memmove(&buff[pos + char_len], &buff[pos], strlen(buff) - pos + 1);
+
           buff[pos++] = ch;
-          
+
           for (int i = 1; i < char_len; i++) {
             int next_ch = getch();
             buff[pos++] = next_ch;
@@ -857,7 +843,7 @@ int cpe(char* buff, int max_len, const char* prompt) {
       }
     }
   }
-  
+
   noecho();
   curs_set(0);
   return 1;
@@ -1801,12 +1787,13 @@ __paste()
   list(path, NULL, false, false);
 }
 
-int sins(char *str, const char *ins, char *pos, size_t inslen) {
-    if (pos != NULL) {
-        size_t tlen = strlen(pos); 
-        memmove(pos + inslen, pos, tlen + 1);  
-        memcpy(pos, ins, inslen);                  
-    }
-    return 0;
+int
+sins(char* str, const char* ins, char* pos, size_t inslen)
+{
+  if (pos != NULL) {
+    size_t tlen = strlen(pos);
+    memmove(pos + inslen, pos, tlen + 1);
+    memcpy(pos, ins, inslen);
+  }
+  return 0;
 }
-

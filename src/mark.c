@@ -20,6 +20,7 @@ mark_help()
 {
   __echo("e", COLS - 1);
 
+#ifndef NOHINTS
   int win_height = LINES * 0.8;
   if (win_height < 10) {
     win_height = 10;
@@ -50,12 +51,15 @@ mark_help()
   mvwprintw(win, 11, 0, "r            rename marked files");
 
   wrefresh(win);
+  
+#endif // endif NOHINTS
 
   int ch = getch();
   int next_ch = 0;
 
   if (ch == 'u') {
     __echo("eu", COLS - 2);
+  #ifndef NOHINTS
     delwin(win);
     touchwin(stdscr);
     refresh();
@@ -76,6 +80,9 @@ mark_help()
 
     touchwin(stdscr);
     refresh();
+  #else
+    next_ch = getch();
+  #endif
   }
 
   if (ch != ERR) {

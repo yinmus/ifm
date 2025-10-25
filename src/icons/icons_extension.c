@@ -1,7 +1,7 @@
 #include "icons_extension.h"
 #include <stdio.h>
 
-#ifdef NOICONS 
+#ifdef NOICONS
 const ExtensionMapping extension_mappings[] = {};
 #else
 const ExtensionMapping extension_mappings[] = {
@@ -472,4 +472,5 @@ const ExtensionMapping extension_mappings[] = {
 };
 #endif // ifdef NOICONS
 
-const size_t extlen = sizeof(extension_mappings) / sizeof(extension_mappings[0]);
+const size_t extlen =
+  sizeof(extension_mappings) / sizeof(extension_mappings[0]);

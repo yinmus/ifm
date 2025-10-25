@@ -284,7 +284,7 @@ main(int argc, char* argv[])
           }
         case k_showpath:
           line_clear(LINES - 1);
-          mvwprintw(stdscr, LINES - 1, 0, path);
+          mvwprintw(stdscr, LINES - 1, 0, "%s", path);
           gtimeout(2000);
           break;
 

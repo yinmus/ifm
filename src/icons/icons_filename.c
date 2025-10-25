@@ -1,7 +1,6 @@
 
 #include "icons_filename.h"
 
-
 #ifdef NOICONS
 const FilenameMapping filename_mappings[] = {};
 #else

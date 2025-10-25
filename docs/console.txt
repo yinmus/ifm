@@ -1,18 +1,20 @@
 console mode is necessary for working with external programs.
-After entering the mode using k_console (default: “o”).
+After entering the mode, use k_console (default: “o”).
 
-There are aliases in the command that can simplify writing the command:
-%a - Absolute path to the selected file
-%r - Relative path to the selected file
-%d - Absolute path to the current directory
+There are aliases in the command that can make it easier to type a command, you can also create aliases without heavily editing the code.
+
+%a is the absolute path to the selected file.
+%r is the relative path to the selected file.
+%d is the absolute path to the current directory.
+
 
 In general, everything here is limited only by your imagination, but here is an example:
 
 Create an archive of the current file:
 tar -cf %r.tar %r -> will be executed as: tar -cf filename.tar filename
 
-Meaning of the mode:
-The original idea: for example, you want to open a file by default using Enter / l or the mouse, but the file opens with the wrong program. You write specifically:
-{programm} {filename}
-In addition to this, you can also perform tasks that the file manager cannot do:
+What is the mode for?:
+for example, you want to open the default file using Enter/l or the mouse, but the file opens with the wrong program. You write specifically:
+{program} {file name}
+In addition to this, you can also perform tasks that are beyond the power of the file manager.:
 create archives and more

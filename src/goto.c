@@ -96,6 +96,7 @@ goto_cmd(int next_char)
 void
 goto_help()
 {
+#ifndef NOHINTS
   int win_height = LINES * 0.8;
   if (win_height < 10) {
     win_height = 10;
@@ -135,11 +136,16 @@ goto_help()
   wrefresh(win);
 
   int ch = getch();
+
   delwin(win);
   touchwin(stdscr);
+  refresh();
+#else
+  int ch = getch();
   refresh();
 
   if (ch != ERR) {
     goto_cmd(ch);
   }
+#endif // #ifndef NOHINTS
 }

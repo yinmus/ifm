@@ -16,9 +16,7 @@ typedef struct
 IconResult
 icon_ext(const char* extension)
 {
-  for (size_t i = 0;
-       i < sizeof(extlen);
-       i++) {
+  for (size_t i = 0; i < sizeof(extlen); i++) {
     if (!strcasecmp(extension, extension_mappings[i].extension)) {
       return (IconResult){ extension_mappings[i].icon,
                            extension_mappings[i].color };
@@ -30,9 +28,7 @@ icon_ext(const char* extension)
 IconResult
 icon_filename(const char* filename)
 {
-  for (size_t i = 0;
-       i < fnlen;
-       i++) {
+  for (size_t i = 0; i < fnlen; i++) {
     if (!strcasecmp(filename, filename_mappings[i].filename)) {
       return (IconResult){ filename_mappings[i].icon,
                            filename_mappings[i].color };
