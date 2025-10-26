@@ -42,8 +42,7 @@ Goto mode:
 
 There is a goto mode that helps you quickly navigate through root directories.
 g -> Enter goto mode.
-Next, you will see a prompt window.
-
+Next, you'll see a hint window. You can remove it by specifying NOHINTS=1 during compilation !(the file marking hint windows will also be removed).
 File operations:
 
 o -> Open the console described in console.txt
